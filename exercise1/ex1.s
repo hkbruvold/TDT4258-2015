@@ -144,6 +144,10 @@ _reset:
 
 	// store data to memory
 	str r2, [r1, #GPIO_DOUT]
+
+	b main
+
+	
 	/////////////////////////////////////////////////////////////////////////////
 	//
   // GPIO handler
@@ -162,3 +166,16 @@ gpio_handler:
 dummy_handler:  
         b .  // do nothing
 
+main:
+	// load led and button base memory to register
+	ldr r1, =GPIO_PA_BASE
+	ldr r3, =GPIO_PC_BASE
+
+loop:	
+	// load offset for reading and writing for button and led
+	ldr r2, [r1, #GPIO_DOUT]
+	ldr r4, [r3, #GPIO_DIN]
+
+	// write button data to led
+	mov r4, r2
+	b loop
