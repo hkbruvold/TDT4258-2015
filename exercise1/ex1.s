@@ -180,12 +180,22 @@ _reset:
 	/////////////////////////////////////////////////////////////////////////////
 	
         .thumb_func
-gpio_handler:
+gpio_handler:  
+
+	// load led and button base memory to register
 	ldr r1, =GPIO_PA_BASE
 	ldr r3, =GPIO_PC_BASE
 
+	// debounce
+	mov r5, #1000
+debounce:
+	sub r5, r5, #1
+	cmp r5, #0
+	bne debounce
+	
+	// load offset for reading and writing for button and led
 	ldr r4, [r3, #GPIO_DIN]
-    lsl r4, 8
+	lsl r4, 8
 
 	// write button data to led
 	str r4, [r1, #GPIO_DOUT]
