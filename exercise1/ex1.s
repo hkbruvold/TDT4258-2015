@@ -165,8 +165,7 @@ _reset:
 
     // enable deep sleep and automatic sleep
     ldr r1, =SCR
-    ldr r2, [r1]
-    orr r2, r2, #0x6
+    mov r2, #6
     str r2, [r1]
 
 	wfi
