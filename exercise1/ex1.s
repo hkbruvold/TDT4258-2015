@@ -200,6 +200,10 @@ debounce:
 	// write button data to led
 	str r4, [r1, #GPIO_DOUT]
 
+    ldr r1, =GPIO_BASE
+    ldr r2, [r1, #GPIO_IF]
+    str r2, [r1, #GPIO_IFC]
+
     // return
     bx r14
 
