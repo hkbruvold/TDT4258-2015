@@ -145,7 +145,31 @@ _reset:
 	// store data to memory
 	str r2, [r1, #GPIO_DOUT]
 
-	b main
+    /// enable GPIO interrupts
+    ldr r1, =GPIO_BASE
+    ldr r3, =0x22222222
+    str r3, [r1, #GPIO_EXTIPSELL]
+
+    ldr r3, =0xFF
+    // interrupt on falling edge
+    str r3, [r1, #GPIO_EXTIFALL]
+    // interrupt on rising edge
+    str r3, [r1, #GPIO_EXTIRISE]
+    // enable GPIO interrupts
+    str r3, [r1, #GPIO_IEN]
+
+    // enable interrupt handling
+    ldr r3, =0x802
+    ldr r1, =ISER0
+    str r3, [r1]
+
+    // enable deep sleep and automatic sleep
+    ldr r1, =SCR
+    ldr r2, [r1]
+    orr r2, r2, #0x6
+    str r2, [r1]
+
+	wfi
 
 	
 	/////////////////////////////////////////////////////////////////////////////
@@ -156,27 +180,20 @@ _reset:
 	/////////////////////////////////////////////////////////////////////////////
 	
         .thumb_func
-gpio_handler:  
-
-	      b .  // do nothing
-	
-	/////////////////////////////////////////////////////////////////////////////
-	
-        .thumb_func
-dummy_handler:  
-        b .  // do nothing
-
-main:
-	// load led and button base memory to register
+gpio_handler:
 	ldr r1, =GPIO_PA_BASE
 	ldr r3, =GPIO_PC_BASE
 
-loop:	
-	// load offset for reading and writing for button and led
-	//ldr r2, [r1, #GPIO_DOUT]
 	ldr r4, [r3, #GPIO_DIN]
     lsl r4, 8
 
 	// write button data to led
 	str r4, [r1, #GPIO_DOUT]
-	b loop
+
+    // return
+    bx r14
+
+        .thumb_func
+dummy_handler:  
+        b .  // do nothing
+
