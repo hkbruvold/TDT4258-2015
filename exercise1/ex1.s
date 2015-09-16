@@ -173,9 +173,9 @@ main:
 
 loop:	
 	// load offset for reading and writing for button and led
-	ldr r2, [r1, #GPIO_DOUT]
+	//ldr r2, [r1, #GPIO_DOUT]
 	ldr r4, [r3, #GPIO_DIN]
 
 	// write button data to led
-	mov r4, r2
+	str r4, [r1, #GPIO_DOUT]
 	b loop
