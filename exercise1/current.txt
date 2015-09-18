@@ -1,0 +1,9 @@
+Idle: 1.3uA
+1 button: 80.4uA
+2 buttons: 156.6uA
+3 buttons: 227.3uA
+4 buttons: 300.0uA
+6 buttons: 365uA
+6 buttons: 430uA
+7 buttons: 490uA
+8 buttons: 550uA
