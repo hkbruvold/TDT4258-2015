@@ -181,6 +181,5 @@ gpio_handler:
 
 .thumb_func
 dummy_handler:
-    // do nothing
+    // this is never reached
     b .
-
