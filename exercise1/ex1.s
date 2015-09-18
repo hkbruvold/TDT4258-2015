@@ -81,59 +81,62 @@
 
 .thumb_func
 _reset:
-    //// start GPIO clocks ////
+    //// enable high frequency peripheral clock for GPIO ////
     // load base address to r1
     ldr r1, =CMU_BASE
 
-    // load HFPERCLK to r2
+    // load CMU_HFPERCLKEN0 to r2
     ldr r2, [r1, #CMU_HFPERCLKEN0]
 
-    // set GPIO bit
+    // set the GPIO bit
     mov r3, #1
     lsl r3, r3, #CMU_HFPERCLKEN0_GPIO
     orr r2, r2, r3
 
-    // store value in memory
+    // store new settings in memory. the changes will now be applied
     str r2, [r1, #CMU_HFPERCLKEN0]
 
-    //// set up LED pins 8-15 ////
+    //// initialize LED pins (GPIO 8-15) ////
     // load base address for GPIO port A to r1
     ldr r1, =GPIO_PA_BASE
 
-    // set high drive strength bit (0x2)
+    // set port A drive strength to high (20 mA)
     ldr r2, [r1, #GPIO_CTRL]
     orr r2, r2, #0x2
     str r2, [r1, #GPIO_CTRL]
 
-    /// set pins to output
+    /// set all pins to value 5 (push-pull output with drive-strength set by DRIVEMODE)
     mov r3, #0x55555555
     str r3, [r1, #GPIO_MODEH]
 
-    //// set up button pins 0-7 ////
+    //// initialize button pins (GPIO 0-7) ////
     // load base address for GPIO port C to r1
     ldr r1, =GPIO_PC_BASE
 
-    /// set pins to input
+    /// set all pins to value 3 (input enabled with filter. DOUT determines pull direction)
     // load data to r3
     mov r3, #0x33333333
     str r3, [r1, #GPIO_MODEL]
 
-    // enable pull-up on pins
+    // set pin 0-7 to be pull-up
     ldr r2, [r1, #GPIO_DOUT]
     orr r2, r2, #0xff
     str r2, [r1, #GPIO_DOUT]
 
-    //// GPIO interrupts ////
+    //// initialize GPIO interrupts ////
+    // load base address for GPIO
     ldr r1, =GPIO_BASE
+
+    // set external interrupt 0-7 to use pin 0-7 on port C
     mov r3, #0x22222222
     str r3, [r1, #GPIO_EXTIPSELL]
 
     mov r3, #0xFF
-    // interrupt on falling edge
+    // fire interrupt on falling edge
     str r3, [r1, #GPIO_EXTIFALL]
-    // interrupt on rising edge
+    // fire interrupt on rising edge
     str r3, [r1, #GPIO_EXTIRISE]
-    // enable GPIO interrupts
+    // enable GPIO external interrupt 0-7
     str r3, [r1, #GPIO_IEN]
 
     // enable interrupt handling (write 0x802 to ISER0)
