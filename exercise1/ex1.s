@@ -162,13 +162,6 @@ gpio_handler:
     ldr r1, =GPIO_PA_BASE
     ldr r2, =GPIO_PC_BASE
 
-    // debounce
-    mov r5, #1000
-debounce:
-    sub r5, r5, #1
-    cmp r5, #0
-    bne debounce
-
     // load offset for reading and writing for button and led
     ldr r3, [r2, #GPIO_DIN]
     /* because the LED outputs are on pin 8-15 and input is on pins 0-7, we
