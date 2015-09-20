@@ -144,7 +144,7 @@ _reset:
     ldr r1, =ISER0
     str r3, [r1]
 
-    // enable deep sleep and automatic sleep
+    // enable deep sleep and automatic sleep after interrupt
     ldr r1, =SCR
     mov r2, #6
     str r2, [r1]
