@@ -100,9 +100,9 @@ _reset:
     // load base address for GPIO port A to r1
     ldr r1, =GPIO_PA_BASE
 
-    // set port A drive strength to high (20 mA)
+    // set port A drive strength to LOW (2 mA drive current)
     ldr r2, [r1, #GPIO_CTRL]
-    orr r2, r2, #0x2
+    orr r2, r2, #0x3
     str r2, [r1, #GPIO_CTRL]
 
     /// set all pins to value 5 (push-pull output with drive-strength set by DRIVEMODE)
