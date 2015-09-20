@@ -1,9 +1,27 @@
+Drive strength: HIGH (0x2), without LED
 Idle: 1.3uA
-1 button: 80.4uA
-2 buttons: 156.6uA
-3 buttons: 227.3uA
-4 buttons: 300.0uA
+1 button: 80uA
+2 buttons: 156uA
+3 buttons: 227uA
+4 buttons: 300uA
 6 buttons: 365uA
 6 buttons: 430uA
 7 buttons: 490uA
 8 buttons: 550uA
+
+
+Drive strength STANDARD (0x0), 1 button
+with LED: 11.2mA
+without LED: 80uA
+
+Drive strength LOWEST (0x1), 1 button
+with LED: 625uA
+without LED: 125uA
+
+Drive strength: HIGH (0x2), 1 button
+with LED: 12.5mA
+without LED: 80uA
+
+Drive strength LOW (0x3), 1 button
+with LED: 7.0mA
+without LED: 80uA
