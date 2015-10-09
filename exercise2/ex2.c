@@ -33,7 +33,8 @@ int main(void)
   */
   *SCR = 6; /* enable deep sleep with automatic sleep after interrupt */
 
-  while(1);
+  __WFI(); /* go into deep sleep */
+  //while(1);
 
   return 0;
 }
