@@ -31,6 +31,8 @@ int main(void)
   /* TODO for higher energy efficiency, sleep while waiting for interrupts
      instead of infinite loop for busy-waiting
   */
+  *SCR = 6; /* enable deep sleep with automatic sleep after interrupt */
+
   while(1);
 
   return 0;
@@ -45,6 +47,7 @@ void setupNVIC()
      You will need TIMER1, GPIO odd and GPIO even interrupt handling for this
      assignment.
   */
+  *ISER0 = 0x802; /* enable interrupt handling */
 }
 
 /* if other interrupt handlers are needed, use the following names: 
