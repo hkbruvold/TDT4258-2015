@@ -4,23 +4,32 @@
 #include "efm32gg.h"
 
 /* function to setup the timer */
-void setupTimer(uint16_t period)
-{
-  /*
-    TODO enable and set up the timer
-    
-    1. Enable clock to timer by setting bit 6 in CMU_HFPERCLKEN0
-    2. Write the period to register TIMER1_TOP
-    3. Enable timer interrupt generation by writing 1 to TIMER1_IEN
-    4. Start the timer by writing 1 to TIMER1_CMD
-    
-    This will cause a timer interrupt to be generated every (period) cycles. Remember to configure the NVIC as well, otherwise the interrupt handler will not be invoked.
-  */  
+void setupLETIMER(){
+  *CMU_OSCENCMD |= 1 << 8;
 
-    *CMU_HFPERCLKEN0 |= 1 << 6;
-    *TIMER1_TOP = period;
-    *TIMER1_IEN |= 1;
-    *TIMER1_CMD |= 1;
+  // Select LFXO to drive LFACLK
+  *CMU_LFCLKSEL &= ~0x3 << 0;
+  *CMU_LFCLKSEL |= 2 << 0;
+  *CMU_CTRL &= ~3 << 18;  
+
+  // enable low energy peripherals in core clock
+  *CMU_HFCORECLKEN0 |= 1 << 4;
+
+  // enable clock for LETIMER
+  *CMU_LFACLKEN0 |= 1 << 2;
+
+  // set LETIMER0_COMP0 top register
+  *LETIMER0_CTRL |= 1 << 9;
+
+  // COMP0 set to 0 for one underflow interrupt per cycle
+  *LETIMER0_COMP0 = 0x0;
+
+  // start
+  *LETIMER0_CMD |= 1 << 0;
+
+  // enable interrupt
+  *LETIMER0_IEN |= 1 << 2;
+
 }
 
 
