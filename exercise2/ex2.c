@@ -10,7 +10,8 @@
   registers are 16 bits.
 */
 /* The period between sound samples, in clock cycles */
-#define   SAMPLE_PERIOD   317
+#define   SAMPLE_PERIOD   427
+// 427 means 32768 timers per second (14MHz / 427)
 
 /* Declaration of peripheral setup functions */
 void setupTimer(uint32_t period);
@@ -28,9 +29,6 @@ int main(void)
   /* Enable interrupt handling */
   setupNVIC();
 
-  /* TODO for higher energy efficiency, sleep while waiting for interrupts
-     instead of infinite loop for busy-waiting
-  */
   //*SCR = 6; /* enable deep sleep with automatic sleep after interrupt */
 
   __asm__("wfi"); /* go into deep sleep */
@@ -45,14 +43,9 @@ int main(void)
 
 void setupNVIC()
 {
-  /* TODO use the NVIC ISERx registers to enable handling of interrupt(s)
-     remember two things are necessary for interrupt handling:
-      - the peripheral must generate an interrupt signal
-      - the NVIC must be configured to make the CPU handle the signal
-     You will need TIMER1, GPIO odd and GPIO even interrupt handling for this
-     assignment.
-  */
   *ISER0 |= IRQ_TIMER1;
+  *ISER0 |= IRQ_GPIO_ODD;
+  *ISER0 |= IRQ_GPIO_EVEN;
 }
 
 /* if other interrupt handlers are needed, use the following names:
