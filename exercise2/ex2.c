@@ -13,7 +13,7 @@
 #define   SAMPLE_PERIOD   317
 
 /* Declaration of peripheral setup functions */
-void setupTimer(uint32_t period);
+void setupLETIMER();
 void setupDAC();
 void setupNVIC();
 
@@ -23,7 +23,7 @@ int main(void)
   /* Call the peripheral setup functions */
   setupGPIO();
   setupDAC();
-  setupTimer(SAMPLE_PERIOD);
+  setupLETIMER();
 
   /* Enable interrupt handling */
   setupNVIC();
