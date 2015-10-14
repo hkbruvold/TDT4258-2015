@@ -10,7 +10,7 @@
   registers are 16 bits.
 */
 /* The period between sound samples, in clock cycles */
-#define   SAMPLE_PERIOD   0
+#define   SAMPLE_PERIOD   1
 
 /* Declaration of peripheral setup functions */
 void setupTimer(uint32_t period);
@@ -31,13 +31,17 @@ int main(void)
   /* TODO for higher energy efficiency, sleep while waiting for interrupts
      instead of infinite loop for busy-waiting
   */
-  *SCR = 6; /* enable deep sleep with automatic sleep after interrupt */
+  //*SCR = 6; /* enable deep sleep with automatic sleep after interrupt */
 
   __asm__("wfi"); /* go into deep sleep */
   //__WFI();
 
   return 0;
 }
+
+#define IRQ_GPIO_EVEN (1 << 1)
+#define IRQ_GPIO_ODD (1 << 11)
+#define IRQ_TIMER1 (1 << 12)
 
 void setupNVIC()
 {
@@ -48,7 +52,7 @@ void setupNVIC()
      You will need TIMER1, GPIO odd and GPIO even interrupt handling for this
      assignment.
   */
-  *ISER0 = 0x802; /* enable interrupt handling */
+  *ISER0 |= IRQ_TIMER1;
 }
 
 /* if other interrupt handlers are needed, use the following names: 
