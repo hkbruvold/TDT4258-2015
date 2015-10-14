@@ -31,7 +31,7 @@ int main(void)
   /* TODO for higher energy efficiency, sleep while waiting for interrupts
      instead of infinite loop for busy-waiting
   */
-  //*SCR = 6; /* enable deep sleep with automatic sleep after interrupt */
+  *SCR = 6; /* enable deep sleep with automatic sleep after interrupt */
 
   __asm__("wfi"); /* go into deep sleep */
   //__WFI();
