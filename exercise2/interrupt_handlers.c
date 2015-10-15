@@ -28,15 +28,19 @@ void __attribute__ ((interrupt)) TIMER1_IRQHandler()
 }
 
 /* Common GPIO handler function */
-void gpio_handler()
+void __attribute__ ((interrupt)) gpio_handler()
 {
+    // map GPIO buttons 1-3 to sound effects, and the rest to "stop sound"
     if ((*GPIO_PC_DIN & 1) == 0)
-        set_song(&victory_fanfare);
+        play_song(&victory_fanfare);
     else if (((*GPIO_PC_DIN >> 1) & 1) == 0)
-        set_song(&lisa_gikk_til_skolen);
+        play_song(&lisa_gikk_til_skolen);
+    else if (((*GPIO_PC_DIN >> 2) & 1) == 0)
+        play_effect();
     else
-        set_song(0);
+        play_song(0);
 
+    // clear interrupt
     *GPIO_IFC = *GPIO_IF;
 }
 
@@ -51,4 +55,3 @@ void __attribute__ ((interrupt)) GPIO_ODD_IRQHandler()
 {
     gpio_handler();
 }
-

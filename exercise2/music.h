@@ -24,7 +24,8 @@ typedef struct
     song_part_t parts[];
 } song_t;
 
-void set_song(song_t *song);
+void play_song(song_t *song);
+void play_effect();
 void play();
 
 #endif // MUSIC_H

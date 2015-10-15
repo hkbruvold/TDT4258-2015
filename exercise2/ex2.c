@@ -8,14 +8,14 @@
 
 /* The period between sound samples, in clock cycles
  * Default frequency 14MHz */
-#define   SAMPLE_PERIOD   (14000000/SAMPLES)
+#define SAMPLE_PERIOD (14000000/SAMPLES)
 
 /* Your code will start executing here */
 int main(void)
 {
-  /* Call the peripheral setup functions */
-  setupGPIO();
-  setupDAC();
+    /* Call the peripheral setup functions */
+    setupGPIO();
+    setupDAC();
 
 #ifdef USE_LETIMER
     setupLETIMER();
@@ -23,19 +23,17 @@ int main(void)
     setupTimer(SAMPLE_PERIOD);
 #endif
 
-  /* Enable interrupt handling */
-  setupNVIC();
+    /* Enable interrupt handling */
+    setupNVIC();
 
-//  *SCR = 6; /* enable deep sleep with automatic sleep after interrupt */
-  __asm__("wfi"); /* go into deep sleep */
-
-  return 0;
+    *SCR = 0b10110; /* enable deep sleep with automatic sleep after interrupt */
+    __asm__("wfi"); /* go into sleep (wait for interrupt) */
 }
 
 void setupNVIC()
 {
-  *ISER0 |= IRQ_GPIO_ODD;
-  *ISER0 |= IRQ_GPIO_EVEN;
+    *ISER0 |= IRQ_GPIO_ODD;
+    *ISER0 |= IRQ_GPIO_EVEN;
 
 #ifdef USE_LETIMER
     *ISER0 |= IRQ_LETIMER0;
