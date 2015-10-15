@@ -3,6 +3,6 @@
 
 #include "music.h"
 
-extern song_t scale;
+extern song_t lisa_gikk_til_skolen;
 
 #endif

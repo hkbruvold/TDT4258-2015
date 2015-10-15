@@ -6,7 +6,7 @@ samples_per_sec = 32768
 
 def generate_sample(freq):
     s = []
-    samples = samples_per_sec / freq
+    samples = int(samples_per_sec / freq)
     for i in range(samples):
         s.append(sin(2*pi*(i/float(samples))))
     return s
@@ -29,7 +29,7 @@ def format_array(sample, note):
         text += str(sample[i])
         text += ", "
     text += str(sample[-1])
-    text += " } };"
+    text += " } };\n\n"
     return text
 
 def create_samples(freq, note):
@@ -64,36 +64,56 @@ h.write('#include "music.h"\n\n')
 
 ### generate samples
 
-c.write(create_samples(440, "a4")+"\n")
-c.write(create_samples(466, "bflat")+"\n")
-c.write(create_samples(494, "b")+"\n")
-c.write(create_samples(523, "c"))
-c.write(create_samples(554, "csharp")+"\n")
-c.write(create_samples(587, "d")+"\n")
-c.write(create_samples(622, "dsharp")+"\n")
-c.write(create_samples(659, "e")+"\n")
-c.write(create_samples(698, "f")+"\n")
-c.write(create_samples(740, "fsharp")+"\n")
-c.write(create_samples(784, "g")+"\n")
-c.write(create_samples(831, "aflat")+"\n")
-c.write(create_samples(880, "a5")+"\n\n")
+c.write(format_array([0], "silence"))
+c.write(create_samples(523.25, "c5"))
+c.write(create_samples(587.33, "d5"))
+c.write(create_samples(659.25, "e5"))
+c.write(create_samples(698.46, "f5"))
+c.write(create_samples(783.99, "g5"))
+c.write(create_samples(880, "a5"))
 
 ### generate songs
 
-add_song("scale", (
-    (250, "a4"),
-    (250, "b"),
-    (250, "bflat"),
-    (250, "c"),
-    (250, "csharp"),
-    (250, "d"),
-    (250, "dsharp"),
-    (250, "e"),
-    (250, "f"),
-    (250, "fsharp"),
-    (250, "g"),
-    (250, "aflat"),
-    (250, "a5")
+speed = 1500
+add_song("lisa_gikk_til_skolen", (
+    (speed/4, "c5"),
+    (speed/4, "d5"),
+    (speed/4, "e5"),
+    (speed/4, "f5"),
+    (speed/2-50, "g5"),
+    (50, "silence"),
+    (speed/2-50, "g5"),
+    (50, "silence"),
+    (speed/4-50, "a5"),
+    (50, "silence"),
+    (speed/4-50, "a5"),
+    (50, "silence"),
+    (speed/4-50, "a5"),
+    (50, "silence"),
+    (speed/4-50, "a5"),
+    (50, "silence"),
+    (speed-50, "g5"),
+    (50, "silence"),
+
+    (speed/4-50, "f5"),
+    (50, "silence"),
+    (speed/4-50, "f5"),
+    (50, "silence"),
+    (speed/4-50, "f5"),
+    (50, "silence"),
+    (speed/4-50, "f5"),
+    (speed/2-50, "e5"),
+    (50, "silence"),
+    (speed/2-50, "e5"),
+    (50, "silence"),
+    (speed/4-50, "d5"),
+    (50, "silence"),
+    (speed/4-50, "d5"),
+    (50, "silence"),
+    (speed/4-50, "d5"),
+    (50, "silence"),
+    (speed/4-50, "d5"),
+    (speed, "c5"),
 ), c, h)
 
 h.write("\n#endif")

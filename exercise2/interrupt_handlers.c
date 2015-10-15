@@ -30,7 +30,7 @@ void __attribute__ ((interrupt)) TIMER1_IRQHandler()
 /* Common GPIO handler function */
 void gpio_handler()
 {
-    set_song(&scale);
+    set_song(&lisa_gikk_til_skolen);
     start_timer();
 
     *GPIO_IFC = *GPIO_IF;
@@ -39,12 +39,18 @@ void gpio_handler()
 /* GPIO even pin interrupt handler */
 void __attribute__ ((interrupt)) GPIO_EVEN_IRQHandler()
 {
+    static ignore_initial = true;
+    if (ignore_initial) { ignore_initial = false; return; }
+
     gpio_handler();
 }
 
 /* GPIO odd pin interrupt handler */
 void __attribute__ ((interrupt)) GPIO_ODD_IRQHandler()
 {
+    static ignore_initial = true;
+    if (ignore_initial) { ignore_initial = false; return; }
+
     gpio_handler();
 }
 
