@@ -16,11 +16,15 @@ struct note_t
 /* TIMER1 interrupt handler */
 void __attribute__ ((interrupt)) LETIMER0_IRQHandler() 
 {
+    if (((*GPIO_PC_DIN) & 1) == 0)
+    {
+        set_song(&test);
+        return;
+    }
+
     // debug output to LEDs
     (*GPIO_PA_DOUT)++;
 
-    if (((*GPIO_PC_DIN) & 1) == 0)
-        set_song(&test);
 
     play();
 
