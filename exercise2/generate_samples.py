@@ -39,11 +39,13 @@ def create_samples(freq, note):
     return c
     
 def new_song(name, notes):
+    """notes are list of tuples (length_in_milliseconds, note)"""
     text = "static song_t %s = {\n" %(name)
     text += "    .length = %i,\n" %(len(notes))
     text += "    .parts = {\n"
     for note in notes:
-        text += "        { .duration = %i, .note = &note_%s },\n" %(note[0], note[1])
+        length = int(note[0]/1000.0*samples_per_sec)
+        text += "        { .duration = %i, .note = &note_%s },\n" %(length, note[1])
     text += "    }\n"
     text += "};\n\n"
     return text
@@ -72,10 +74,10 @@ c.write(create_samples(880, "a5")+"\n\n")
 
 ### generate music
 
-testmusic = [(15000, "a4"),
-             (15000, "bflat"),
-             (15000, "b"),
-             (15000, "c")]
+testmusic = [(500, "a4"),
+             (500, "bflat"),
+             (500, "b"),
+             (500, "c")]
 
 c.write(new_song("test", testmusic))
 
