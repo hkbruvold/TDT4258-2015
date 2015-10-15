@@ -8,4 +8,7 @@ void setupDAC();
 void setupNVIC();
 void setupGPIO();
 
+void start_timer();
+void stop_timer();
+
 #endif // EX2_H

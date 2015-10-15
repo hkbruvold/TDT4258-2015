@@ -1,7 +1,8 @@
 #include "efm32gg.h"
+#include "ex2.h"
 
 #include "music.h"
-//
+
 static unsigned int sample_counter;  // current sample in note
 static unsigned int duration_counter; // time playing this note
 static unsigned int part_counter;  // current note in song
@@ -24,6 +25,7 @@ void play()
     {
         *DAC0_CH0DATA = 0;
         *DAC0_CH1DATA = 0;
+        stop_timer();
         return;
     }
 

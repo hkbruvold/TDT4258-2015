@@ -19,6 +19,5 @@ void setupGPIO()
   /* Enable interrupt */
   *GPIO_EXTIPSELL = 0x22222222; /* set external interrupt to use pin 0-7 port C */
   *GPIO_EXTIFALL = 0xFF; /* fire interrupt on falling edge */
-  *GPIO_EXTIRISE = 0xFF; /* fire interrupt on rising edge */
   *GPIO_IEN = 0xFF; /* enable GPIO external interrupt 0-7 */
 }

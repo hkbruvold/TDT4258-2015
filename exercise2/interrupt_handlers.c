@@ -11,9 +11,9 @@
 
 /* TIMER interrupt handler */
 #ifdef USE_LETIMER
-void __attribute__ ((interrupt)) LETIMER0_IRQHandler() 
+void __attribute__ ((interrupt)) LETIMER0_IRQHandler()
 #else
-void __attribute__ ((interrupt)) TIMER1_IRQHandler() 
+void __attribute__ ((interrupt)) TIMER1_IRQHandler()
 #endif
 {
     // debug output to LEDs
@@ -24,23 +24,28 @@ void __attribute__ ((interrupt)) TIMER1_IRQHandler()
 #ifdef USE_LETIMER
     *LETIMER0_IFC |= 1 << 2;
 #else
-    *TIMER1_IFC = 1;
+    *TIMER1_IFC |= 1;
 #endif
 }
 
-/* GPIO even pin interrupt handler */
-void __attribute__ ((interrupt)) GPIO_EVEN_IRQHandler() 
+/* Common GPIO handler function */
+void gpio_handler()
 {
     set_song(&test);
+    start_timer();
 
     *GPIO_IFC = *GPIO_IF;
 }
 
-/* GPIO odd pin interrupt handler */
-void __attribute__ ((interrupt)) GPIO_ODD_IRQHandler() 
+/* GPIO even pin interrupt handler */
+void __attribute__ ((interrupt)) GPIO_EVEN_IRQHandler()
 {
-    set_song(&test);
+    gpio_handler();
+}
 
-    *GPIO_IFC = *GPIO_IF;
+/* GPIO odd pin interrupt handler */
+void __attribute__ ((interrupt)) GPIO_ODD_IRQHandler()
+{
+    gpio_handler();
 }
 
