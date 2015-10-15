@@ -45,7 +45,7 @@ static struct note_t *notes[] = { &A4, &Bflat, &B, &C, &Csharp, &D, &Dsharp, &E,
 
 
 /* TIMER1 interrupt handler */
-void __attribute__ ((interrupt)) TIMER1_IRQHandler() 
+void __attribute__ ((interrupt)) LETIMER0_IRQHandler() 
 {
     static unsigned int counter = 0;
     static unsigned int note_counter = 0;
@@ -73,7 +73,7 @@ void __attribute__ ((interrupt)) TIMER1_IRQHandler()
     *DAC0_CH0DATA = note->samples[counter % note->length];
     *DAC0_CH1DATA = note->samples[counter % note->length];
 
-    *TIMER1_IFC = 1;
+    *LETIMER0_IFC |= 1 << 2;
 }
 
 /* GPIO even pin interrupt handler */

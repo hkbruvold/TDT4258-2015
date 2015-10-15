@@ -14,7 +14,7 @@
 // 427 means 32768 timers per second (14MHz / 427)
 
 /* Declaration of peripheral setup functions */
-void setupTimer(uint32_t period);
+void setupLETIMER();
 void setupDAC();
 void setupNVIC();
 
@@ -24,12 +24,12 @@ int main(void)
   /* Call the peripheral setup functions */
   setupGPIO();
   setupDAC();
-  setupTimer(SAMPLE_PERIOD);
+  setupLETIMER();
 
   /* Enable interrupt handling */
   setupNVIC();
 
-  //*SCR = 6; /* enable deep sleep with automatic sleep after interrupt */
+  *SCR = 6; /* enable deep sleep with automatic sleep after interrupt */
 
   __asm__("wfi"); /* go into deep sleep */
   //__WFI();
@@ -40,12 +40,14 @@ int main(void)
 #define IRQ_GPIO_EVEN (1 << 1)
 #define IRQ_GPIO_ODD (1 << 11)
 #define IRQ_TIMER1 (1 << 12)
+#define IRQ_LETIMER0 (1 << 26)
 
 void setupNVIC()
 {
-  *ISER0 |= IRQ_TIMER1;
+  // *ISER0 |= IRQ_TIMER1;
   *ISER0 |= IRQ_GPIO_ODD;
   *ISER0 |= IRQ_GPIO_EVEN;
+  *ISER0 |= IRQ_LETIMER0;
 }
 
 /* if other interrupt handlers are needed, use the following names:
