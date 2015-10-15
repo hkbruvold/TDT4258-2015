@@ -41,11 +41,6 @@ int main(void)
   return 0;
 }
 
-#define IRQ_GPIO_EVEN (1 << 1)
-#define IRQ_GPIO_ODD (1 << 11)
-#define IRQ_TIMER1 (1 << 12)
-#define IRQ_LETIMER0 (1 << 26)
-
 void setupNVIC()
 {
   *ISER0 |= IRQ_GPIO_ODD;

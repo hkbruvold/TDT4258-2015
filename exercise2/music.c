@@ -50,6 +50,7 @@ void play_next_sample(note_t *note)
     if (sample_counter >= note->length)
         sample_counter = 0;
 
+    // send samples to both DAC channels
     *DAC0_CH0DATA = note->samples[sample_counter];
     *DAC0_CH1DATA = note->samples[sample_counter];
 

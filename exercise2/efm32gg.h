@@ -110,6 +110,12 @@
 #define IABR0 ((volatile uint32_t*)0xe000e300)
 #define IABR1 ((volatile uint32_t*)0xe000e304)
 
+#define IRQ_GPIO_EVEN (1 << 1)
+#define IRQ_GPIO_ODD (1 << 11)
+#define IRQ_TIMER1 (1 << 12)
+#define IRQ_LETIMER0 (1 << 26)
+
+
 // IPR
 
 #define IPR_BASE  0xe000e400
