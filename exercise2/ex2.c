@@ -3,20 +3,17 @@
 
 #include "efm32gg.h"
 
-/*
-  TODO calculate the appropriate sample period for the sound wave(s)
-  you want to generate. The core clock (which the timer clock is derived
-  from) runs at 14 MHz by default. Also remember that the timer counter
-  registers are 16 bits.
-*/
-/* The period between sound samples, in clock cycles */
-#define   SAMPLE_PERIOD   427
-// 427 means 32768 timers per second (14MHz / 427)
+#include "music.h"
+
+/* The period between sound samples, in clock cycles
+ * Default frequency 14MHz */
+#define   SAMPLE_PERIOD   (14000000/SAMPLES)
 
 /* Declaration of peripheral setup functions */
 void setupLETIMER();
 void setupDAC();
 void setupNVIC();
+void setupGPIO();
 
 /* Your code will start executing here */
 int main(void)
