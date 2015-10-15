@@ -12,13 +12,20 @@ void play_next_sample(note_t *note);
 void set_song(song_t *song)
 {
     current_song = song;
+    part_counter = 0;
+    duration_counter = 0;
+    sample_counter = 0;
 }
 
 void play()
 {
     // check if a song is playing
     if (current_song == 0)
+    {
+        *DAC0_CH0DATA = 0;
+        *DAC0_CH1DATA = 0;
         return;
+    }
 
     // play next sample in the current part
     song_part_t *part = &current_song->parts[part_counter];

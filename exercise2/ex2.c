@@ -5,6 +5,8 @@
 
 #include "music.h"
 
+#include "ex2.h"
+
 /* The period between sound samples, in clock cycles
  * Default frequency 14MHz */
 #define   SAMPLE_PERIOD   (14000000/SAMPLES)
@@ -21,7 +23,12 @@ int main(void)
   /* Call the peripheral setup functions */
   setupGPIO();
   setupDAC();
-  setupLETIMER();
+
+#ifdef USE_LETIMER
+    setupLETIMER();
+#else
+    setupTimer(SAMPLE_PERIOD);
+#endif
 
   /* Enable interrupt handling */
   setupNVIC();
@@ -41,10 +48,14 @@ int main(void)
 
 void setupNVIC()
 {
-  // *ISER0 |= IRQ_TIMER1;
   *ISER0 |= IRQ_GPIO_ODD;
   *ISER0 |= IRQ_GPIO_EVEN;
-  *ISER0 |= IRQ_LETIMER0;
+
+#ifdef USE_LETIMER
+    *ISER0 |= IRQ_LETIMER0;
+#else
+    *ISER0 |= IRQ_TIMER1;
+#endif
 }
 
 /* if other interrupt handlers are needed, use the following names:

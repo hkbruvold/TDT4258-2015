@@ -7,14 +7,20 @@
 
 #include "music_defs.c"
 
+#include "ex2.h"
+
 struct note_t
 {
     unsigned short length;
     unsigned short samples[];
 };
 
-/* TIMER1 interrupt handler */
+/* TIMER interrupt handler */
+#ifdef USE_LETIMER
 void __attribute__ ((interrupt)) LETIMER0_IRQHandler() 
+#else
+void __attribute__ ((interrupt)) TIMER1_IRQHandler() 
+#endif
 {
     if (((*GPIO_PC_DIN) & 1) == 0)
     {
