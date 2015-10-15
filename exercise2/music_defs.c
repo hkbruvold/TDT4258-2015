@@ -1,6 +1,12 @@
 #include "music_defs.h"
 
-static note_t note_silence = { .length = 1, .samples = { 0 } };
+static note_t note_silence = { .length = 1, .samples = { 2048 } };
+
+static note_t note_ab3 = { .length = 157, .samples = { 2048, 2129, 2211, 2293, 2374, 2455, 2535, 2614, 2692, 2769, 2845, 2920, 2994, 3066, 3136, 3204, 3271, 3336, 3398, 3459, 3517, 3573, 3627, 3677, 3726, 3771, 3814, 3854, 3891, 3926, 3957, 3985, 4010, 4032, 4050, 4066, 4078, 4087, 4093, 4095, 4095, 4090, 4083, 4072, 4059, 4042, 4021, 3998, 3971, 3942, 3909, 3873, 3835, 3793, 3749, 3702, 3652, 3600, 3545, 3488, 3429, 3367, 3304, 3238, 3170, 3101, 3030, 2957, 2883, 2808, 2731, 2653, 2574, 2495, 2414, 2333, 2252, 2170, 2088, 2007, 1925, 1843, 1762, 1681, 1600, 1521, 1442, 1364, 1287, 1212, 1138, 1065, 994, 925, 857, 791, 728, 666, 607, 550, 495, 443, 393, 346, 302, 260, 222, 186, 153, 124, 97, 74, 53, 36, 23, 12, 5, 0, 0, 2, 8, 17, 29, 45, 63, 85, 110, 138, 169, 204, 241, 281, 324, 369, 418, 468, 522, 578, 636, 697, 759, 824, 891, 959, 1029, 1101, 1175, 1250, 1326, 1403, 1481, 1560, 1640, 1721, 1802, 1884, 1966 } };
+
+static note_t note_bb3 = { .length = 139, .samples = { 2048, 2140, 2232, 2324, 2416, 2506, 2596, 2685, 2772, 2858, 2942, 3024, 3105, 3183, 3259, 3332, 3403, 3471, 3536, 3598, 3657, 3712, 3765, 3813, 3858, 3900, 3937, 3971, 4001, 4027, 4048, 4066, 4080, 4089, 4094, 4095, 4092, 4085, 4073, 4058, 4038, 4014, 3987, 3955, 3919, 3880, 3836, 3789, 3739, 3685, 3628, 3567, 3504, 3437, 3368, 3296, 3221, 3144, 3065, 2983, 2900, 2815, 2729, 2641, 2551, 2461, 2370, 2278, 2186, 2094, 2001, 1909, 1817, 1725, 1634, 1544, 1454, 1366, 1280, 1195, 1112, 1030, 951, 874, 799, 727, 658, 591, 528, 467, 410, 356, 306, 259, 215, 176, 140, 108, 81, 57, 37, 22, 10, 3, 0, 1, 6, 15, 29, 47, 68, 94, 124, 158, 195, 237, 282, 330, 383, 438, 497, 559, 624, 692, 763, 836, 912, 990, 1071, 1153, 1237, 1323, 1410, 1499, 1589, 1679, 1771, 1863, 1955 } };
+
+static note_t note_c4 = { .length = 125, .samples = { 2048, 2150, 2253, 2355, 2457, 2557, 2656, 2753, 2849, 2943, 3034, 3123, 3209, 3293, 3373, 3449, 3523, 3592, 3658, 3719, 3777, 3830, 3878, 3922, 3961, 3995, 4025, 4049, 4068, 4082, 4091, 4095, 4094, 4088, 4076, 4059, 4037, 4011, 3979, 3942, 3901, 3854, 3804, 3749, 3689, 3626, 3558, 3487, 3411, 3333, 3251, 3167, 3079, 2989, 2896, 2801, 2705, 2607, 2507, 2406, 2304, 2202, 2099, 1996, 1893, 1791, 1689, 1588, 1488, 1390, 1294, 1199, 1106, 1016, 928, 844, 762, 684, 608, 537, 469, 406, 346, 291, 241, 194, 153, 116, 84, 58, 36, 19, 7, 1, 0, 4, 13, 27, 46, 70, 100, 134, 173, 217, 265, 318, 376, 437, 503, 572, 646, 722, 802, 886, 972, 1061, 1152, 1246, 1342, 1439, 1538, 1638, 1740, 1842, 1945 } };
 
 static note_t note_c5 = { .length = 62, .samples = { 2048, 2255, 2460, 2661, 2855, 3041, 3217, 3382, 3532, 3667, 3786, 3886, 3968, 4030, 4072, 4093, 4093, 4072, 4030, 3968, 3886, 3786, 3667, 3532, 3382, 3217, 3041, 2855, 2661, 2460, 2255, 2048, 1840, 1635, 1434, 1240, 1054, 878, 713, 563, 428, 309, 209, 127, 65, 23, 2, 2, 23, 65, 127, 209, 309, 428, 563, 713, 878, 1054, 1240, 1434, 1635, 1840 } };
 
@@ -14,46 +20,68 @@ static note_t note_g5 = { .length = 41, .samples = { 2048, 2360, 2665, 2956, 322
 
 static note_t note_a5 = { .length = 37, .samples = { 2048, 2394, 2730, 3046, 3334, 3585, 3791, 3948, 4050, 4094, 4079, 4006, 3876, 3694, 3465, 3194, 2891, 2564, 2221, 1874, 1531, 1204, 901, 630, 401, 219, 89, 16, 1, 45, 147, 304, 510, 761, 1049, 1365, 1701 } };
 
+song_t victory_fanfare = {
+    .length = 16,
+    .parts = {
+        { .duration = 1638, .note = &note_silence },
+        { .duration = 4285, .note = &note_c4 },
+        { .duration = 1638, .note = &note_silence },
+        { .duration = 1638, .note = &note_silence },
+        { .duration = 4285, .note = &note_c4 },
+        { .duration = 1638, .note = &note_silence },
+        { .duration = 1638, .note = &note_silence },
+        { .duration = 4285, .note = &note_c4 },
+        { .duration = 1638, .note = &note_silence },
+        { .duration = 13485, .note = &note_c4 },
+        { .duration = 1638, .note = &note_silence },
+        { .duration = 15123, .note = &note_ab3 },
+        { .duration = 15123, .note = &note_bb3 },
+        { .duration = 7561, .note = &note_c4 },
+        { .duration = 7561, .note = &note_bb3 },
+        { .duration = 45371, .note = &note_c4 },
+    }
+};
+
 song_t lisa_gikk_til_skolen = {
     .length = 37,
     .parts = {
-        { .duration = 16384, .note = &note_c5 },
-        { .duration = 16384, .note = &note_d5 },
-        { .duration = 16384, .note = &note_e5 },
-        { .duration = 16384, .note = &note_f5 },
-        { .duration = 31129, .note = &note_g5 },
+        { .duration = 12288, .note = &note_c5 },
+        { .duration = 12288, .note = &note_d5 },
+        { .duration = 12288, .note = &note_e5 },
+        { .duration = 12288, .note = &note_f5 },
+        { .duration = 22937, .note = &note_g5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 31129, .note = &note_g5 },
+        { .duration = 22937, .note = &note_g5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 14745, .note = &note_a5 },
+        { .duration = 10649, .note = &note_a5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 14745, .note = &note_a5 },
+        { .duration = 10649, .note = &note_a5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 14745, .note = &note_a5 },
+        { .duration = 10649, .note = &note_a5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 14745, .note = &note_a5 },
+        { .duration = 10649, .note = &note_a5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 63897, .note = &note_g5 },
+        { .duration = 47513, .note = &note_g5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 14745, .note = &note_f5 },
+        { .duration = 10649, .note = &note_f5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 14745, .note = &note_f5 },
+        { .duration = 10649, .note = &note_f5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 14745, .note = &note_f5 },
+        { .duration = 10649, .note = &note_f5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 14745, .note = &note_f5 },
-        { .duration = 31129, .note = &note_e5 },
+        { .duration = 10649, .note = &note_f5 },
+        { .duration = 22937, .note = &note_e5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 31129, .note = &note_e5 },
+        { .duration = 22937, .note = &note_e5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 14745, .note = &note_d5 },
+        { .duration = 10649, .note = &note_d5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 14745, .note = &note_d5 },
+        { .duration = 10649, .note = &note_d5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 14745, .note = &note_d5 },
+        { .duration = 10649, .note = &note_d5 },
         { .duration = 1638, .note = &note_silence },
-        { .duration = 14745, .note = &note_d5 },
-        { .duration = 65536, .note = &note_c5 },
+        { .duration = 10649, .note = &note_d5 },
+        { .duration = 49152, .note = &note_c5 },
     }
 };
 

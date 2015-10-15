@@ -16,6 +16,8 @@ void set_song(song_t *song)
     part_counter = 0;
     duration_counter = 0;
     sample_counter = 0;
+
+    start_timer();
 }
 
 void play()
@@ -23,8 +25,8 @@ void play()
     // check if a song is playing
     if (current_song == 0)
     {
-        *DAC0_CH0DATA = 0;
-        *DAC0_CH1DATA = 0;
+        *DAC0_CH0DATA = 2048;
+        *DAC0_CH1DATA = 2048;
         stop_timer();
         return;
     }
@@ -34,8 +36,9 @@ void play()
     play_next_sample(part->note);
     ++duration_counter;
 
-    // if we've finished playing this part, move to the next one
-    if (duration_counter >= part->duration)
+    /* if we've finished playing this part, move to the next one
+     * Also, make sure we don't move in the middle of a tone */
+    if (duration_counter >= part->duration && sample_counter == 1)
     {
         duration_counter = 0;
         ++part_counter;

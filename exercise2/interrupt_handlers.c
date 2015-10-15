@@ -16,7 +16,7 @@ void __attribute__ ((interrupt)) TIMER1_IRQHandler()
 #endif
 {
     // debug output to LEDs
-    (*GPIO_PA_DOUT)++;
+    ++(*GPIO_PA_DOUT);
 
     play();
 
@@ -30,8 +30,12 @@ void __attribute__ ((interrupt)) TIMER1_IRQHandler()
 /* Common GPIO handler function */
 void gpio_handler()
 {
-    set_song(&lisa_gikk_til_skolen);
-    start_timer();
+    if ((*GPIO_PC_DIN & 1) == 0)
+        set_song(&victory_fanfare);
+    else if (((*GPIO_PC_DIN >> 1) & 1) == 0)
+        set_song(&lisa_gikk_til_skolen);
+    else
+        set_song(0);
 
     *GPIO_IFC = *GPIO_IF;
 }
@@ -39,18 +43,12 @@ void gpio_handler()
 /* GPIO even pin interrupt handler */
 void __attribute__ ((interrupt)) GPIO_EVEN_IRQHandler()
 {
-    static ignore_initial = true;
-    if (ignore_initial) { ignore_initial = false; return; }
-
     gpio_handler();
 }
 
 /* GPIO odd pin interrupt handler */
 void __attribute__ ((interrupt)) GPIO_ODD_IRQHandler()
 {
-    static ignore_initial = true;
-    if (ignore_initial) { ignore_initial = false; return; }
-
     gpio_handler();
 }
 

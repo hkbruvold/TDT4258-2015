@@ -64,7 +64,10 @@ h.write('#include "music.h"\n\n')
 
 ### generate samples
 
-c.write(format_array([0], "silence"))
+c.write(format_array([2048], "silence"))
+c.write(create_samples(207.65, "ab3"))
+c.write(create_samples(235.08, "bb3"))
+c.write(create_samples(261.63, "c4"))
 c.write(create_samples(523.25, "c5"))
 c.write(create_samples(587.33, "d5"))
 c.write(create_samples(659.25, "e5"))
@@ -74,7 +77,20 @@ c.write(create_samples(880, "a5"))
 
 ### generate songs
 
-speed = 2000
+speed = 60000/130.0
+add_song("victory_fanfare", (
+    (50, "silence"), (speed/2-100, "c4"), (50, "silence"),
+    (50, "silence"), (speed/2-100, "c4"), (50, "silence"),
+    (50, "silence"), (speed/2-100, "c4"), (50, "silence"),
+    (speed/1-50, "c4"), (50, "silence"),
+    (speed/1, "ab3"),
+    (speed/1, "bb3"),
+    (speed/2, "c4"),
+    (speed/2, "bb3"),
+    (speed*3, "c4"),
+), c, h)
+
+speed = 1500
 add_song("lisa_gikk_til_skolen", (
     (speed/4, "c5"),
     (speed/4, "d5"),

@@ -29,8 +29,6 @@ void setupTimer(uint16_t period)
     *CMU_HFPERCLKEN0 |= 1 << 6;
     *TIMER1_TOP = period;
     *TIMER1_IEN |= 1;
-
-    start_timer();
 }
 
 void setupLETIMER()
@@ -56,7 +54,5 @@ void setupLETIMER()
 
     // enable interrupt
     *LETIMER0_IEN |= 1 << 2;
-
-    start_timer();
 }
 
