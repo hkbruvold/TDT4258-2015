@@ -2,7 +2,6 @@
 #include <stdbool.h>
 
 #include "efm32gg.h"
-
 #include "music.h"
 
 #include "ex2.h"
@@ -10,12 +9,6 @@
 /* The period between sound samples, in clock cycles
  * Default frequency 14MHz */
 #define   SAMPLE_PERIOD   (14000000/SAMPLES)
-
-/* Declaration of peripheral setup functions */
-void setupLETIMER();
-void setupDAC();
-void setupNVIC();
-void setupGPIO();
 
 /* Your code will start executing here */
 int main(void)
@@ -34,9 +27,7 @@ int main(void)
   setupNVIC();
 
   *SCR = 6; /* enable deep sleep with automatic sleep after interrupt */
-
   __asm__("wfi"); /* go into deep sleep */
-  //__WFI();
 
   return 0;
 }

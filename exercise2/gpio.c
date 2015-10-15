@@ -14,11 +14,11 @@ void setupGPIO()
 
   /* Enable buttons */
   *GPIO_PC_MODEL = 0x33333333; /* set pins to input with filter*/
-  *GPIO_PC_DOUT = 0xff; /* set pin to be pull-up */
+  *GPIO_PC_DOUT |= 0xFF; /* set pin to be pull-up */
 
   /* Enable interrupt */
-  *GPIO_EXTIPSELL = 0xff; /* set external interrupt to use pin 0-7 port C */
-  *GPIO_EXTIFALL = 0xff; /* fire interrupt on falling edge */
-  *GPIO_EXTIRISE = 0xff; /* fire interrupt on rising edge */
-  *GPIO_IEN = 0xff; /* enable GPIO external interrupt 0-7 */
+  *GPIO_EXTIPSELL = 0x22222222; /* set external interrupt to use pin 0-7 port C */
+  *GPIO_EXTIFALL = 0xFF; /* fire interrupt on falling edge */
+  *GPIO_EXTIRISE = 0xFF; /* fire interrupt on rising edge */
+  *GPIO_IEN = 0xFF; /* enable GPIO external interrupt 0-7 */
 }

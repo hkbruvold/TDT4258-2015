@@ -1,6 +1,11 @@
+#define USE_LETIMER
+
 #ifndef EX2_H
 #define EX2_H
 
-#define USE_LETIMER
+void setupLETIMER();
+void setupDAC();
+void setupNVIC();
+void setupGPIO();
 
-#endif
+#endif // EX2_H
