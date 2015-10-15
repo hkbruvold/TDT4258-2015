@@ -29,25 +29,55 @@ def format_array(sample, note):
         text += str(sample[i])
         text += ", "
     text += str(sample[-1])
-    text += " } }"
+    text += " } };"
     return text
 
 def create_samples(freq, note):
     a = generate_sample(freq)
     b = convert_to_12bit(a)
     c = format_array(b, note)
-    print c
+    return c
+    
+def new_song(name, notes):
+    text = "static song_t %s = {\n" %(name)
+    text += "    .length = %i,\n" %(len(notes))
+    text += "    .parts = {\n"
+    for note in notes:
+        text += "        { .duration = %i, .note = &note_%s },\n" %(note[0], note[1])
+    text += "    }\n"
+    text += "};\n\n"
+    return text
 
-create_samples(440, "a4")
-create_samples(466, "bflat")
-create_samples(494, "b")
-create_samples(523, "c")
-create_samples(554, "csharp")
-create_samples(587, "d")
-create_samples(622, "dsharp")
-create_samples(659, "e")
-create_samples(698, "f")
-create_samples(740, "fsharp")
-create_samples(784, "g")
-create_samples(831, "aflat")
-create_samples(880, "a5")
+c = open("music_defs.c", 'w')
+h = open("music_defs.h", 'w')
+
+
+c.write("#include \"music.h\"\n\n")
+
+### generate samples
+
+c.write(create_samples(440, "a4")+"\n")
+c.write(create_samples(466, "bflat")+"\n")
+c.write(create_samples(494, "b")+"\n")
+c.write(create_samples(523, "c"))
+c.write(create_samples(554, "csharp")+"\n")
+c.write(create_samples(587, "d")+"\n")
+c.write(create_samples(622, "dsharp")+"\n")
+c.write(create_samples(659, "e")+"\n")
+c.write(create_samples(698, "f")+"\n")
+c.write(create_samples(740, "fsharp")+"\n")
+c.write(create_samples(784, "g")+"\n")
+c.write(create_samples(831, "aflat")+"\n")
+c.write(create_samples(880, "a5")+"\n\n")
+
+### generate music
+
+testmusic = [(15000, "a4"),
+             (15000, "bflat"),
+             (15000, "b"),
+             (15000, "c")]
+
+c.write(new_song("test", testmusic))
+
+
+c.close()
