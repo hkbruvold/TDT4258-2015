@@ -42,6 +42,7 @@ int main(void)
 #define IRQ_GPIO_EVEN (1 << 1)
 #define IRQ_GPIO_ODD (1 << 11)
 #define IRQ_TIMER1 (1 << 12)
+#define IRQ_LETIMER0 (1 << 26)
 
 void setupNVIC()
 {
@@ -52,7 +53,7 @@ void setupNVIC()
      You will need TIMER1, GPIO odd and GPIO even interrupt handling for this
      assignment.
   */
-  *ISER0 |= IRQ_TIMER1;
+  *ISER0 |= IRQ_LETIMER0;
 }
 
 /* if other interrupt handlers are needed, use the following names:
