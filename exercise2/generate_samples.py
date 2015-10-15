@@ -74,7 +74,7 @@ c.write(create_samples(880, "a5"))
 
 ### generate songs
 
-speed = 1500
+speed = 2000
 add_song("lisa_gikk_til_skolen", (
     (speed/4, "c5"),
     (speed/4, "d5"),
