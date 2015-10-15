@@ -4,8 +4,7 @@
 #include "efm32gg.h"
 
 #include "music.h"
-
-#include "music_defs.c"
+#include "music_defs.h"
 
 #include "ex2.h"
 
@@ -31,7 +30,7 @@ void __attribute__ ((interrupt)) TIMER1_IRQHandler()
 /* Common GPIO handler function */
 void gpio_handler()
 {
-    set_song(&test);
+    set_song(&scale);
     start_timer();
 
     *GPIO_IFC = *GPIO_IF;
