@@ -40,7 +40,7 @@ def create_samples(freq, note):
     
 def new_song(name, notes):
     """notes are list of tuples (length_in_milliseconds, note)"""
-    text = "static song_t %s = {\n" %(name)
+    text = "song_t %s = {\n" %(name)
     text += "    .length = %i,\n" %(len(notes))
     text += "    .parts = {\n"
     for note in notes:
@@ -53,6 +53,7 @@ def new_song(name, notes):
 c = open("music_defs.c", 'w')
 h = open("music_defs.h", 'w')
 
+### write c file
 
 c.write("#include \"music.h\"\n\n")
 
@@ -81,5 +82,16 @@ testmusic = [(500, "a4"),
 
 c.write(new_song("test", testmusic))
 
-
 c.close()
+
+
+### write h file
+
+h.write("#ifndef MUSIC_DEFS_H\n")
+h.write("#define MUSIC_DEFS_H\n\n")
+
+h.write("static song_t test;\n")  ## need new line of this per song
+
+h.write("\n#endif")
+h.close()
+
