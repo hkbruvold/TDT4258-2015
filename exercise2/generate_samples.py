@@ -23,7 +23,7 @@ def convert_to_12bit(sample, amp=1.0):
     return s
 
 def format_array(sample, note):
-    text = "static struct note_t note_{} = {{ ".format(note)
+    text = "static note_t note_{} = {{ ".format(note)
     text += ".length = {}, .samples = {{ ".format(len(sample))
     for i in range(len(sample)-1):
         text += str(sample[i])
@@ -37,7 +37,7 @@ def create_samples(freq, note):
     b = convert_to_12bit(a)
     c = format_array(b, note)
     return c
-    
+
 def new_song(name, notes):
     """notes are list of tuples (length_in_milliseconds, note)"""
     text = "song_t %s = {\n" %(name)
@@ -50,12 +50,17 @@ def new_song(name, notes):
     text += "};\n\n"
     return text
 
+def add_song(name, notes, c, h):
+    c.write(new_song(name, notes))
+    h.write("extern song_t {};\n".format(name))
+
 c = open("music_defs.c", 'w')
 h = open("music_defs.h", 'w')
 
-### write c file
-
-c.write("#include \"music.h\"\n\n")
+c.write('#include "music_defs.h"\n\n')
+h.write("#ifndef MUSIC_DEFS_H\n")
+h.write("#define MUSIC_DEFS_H\n\n")
+h.write('#include "music.h"\n\n')
 
 ### generate samples
 
@@ -73,25 +78,25 @@ c.write(create_samples(784, "g")+"\n")
 c.write(create_samples(831, "aflat")+"\n")
 c.write(create_samples(880, "a5")+"\n\n")
 
-### generate music
+### generate songs
 
-testmusic = [(500, "a4"),
-             (500, "bflat"),
-             (500, "b"),
-             (500, "c")]
-
-c.write(new_song("test", testmusic))
-
-c.close()
-
-
-### write h file
-
-h.write("#ifndef MUSIC_DEFS_H\n")
-h.write("#define MUSIC_DEFS_H\n\n")
-
-h.write("static song_t test;\n")  ## need new line of this per song
+add_song("scale", (
+    (250, "a4"),
+    (250, "b"),
+    (250, "bflat"),
+    (250, "c"),
+    (250, "csharp"),
+    (250, "d"),
+    (250, "dsharp"),
+    (250, "e"),
+    (250, "f"),
+    (250, "fsharp"),
+    (250, "g"),
+    (250, "aflat"),
+    (250, "a5")
+), c, h)
 
 h.write("\n#endif")
+c.close()
 h.close()
 
