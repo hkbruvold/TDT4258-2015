@@ -26,7 +26,7 @@ int main(void)
     /* Enable interrupt handling */
     setupNVIC();
 
-    *SCR = 0b10110; /* enable deep sleep with automatic sleep after interrupt */
+    *SCR = 0b110; /* enable deep sleep with automatic sleep after interrupt */
     __asm__("wfi"); /* go into sleep (wait for interrupt) */
 }
 
