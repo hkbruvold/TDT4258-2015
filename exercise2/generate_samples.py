@@ -22,8 +22,8 @@ def convert_to_12bit(sample, amp=1.0):
         s.append(int(value))
     return s
 
-def format_array(sample, note):
-    text = "static note_t note_{} = {{ ".format(note)
+def format_array(sample, tone):
+    text = "static tone_t tone_{} = {{ ".format(tone)
     text += ".length = {}, .samples = {{ ".format(len(sample))
     for i in range(len(sample)-1):
         text += str(sample[i])
@@ -32,26 +32,26 @@ def format_array(sample, note):
     text += " } };\n\n"
     return text
 
-def create_samples(freq, note):
+def create_samples(freq, tone):
     a = generate_sample(freq)
     b = convert_to_12bit(a)
-    c = format_array(b, note)
+    c = format_array(b, tone)
     return c
 
-def new_song(name, notes):
-    """notes are list of tuples (length_in_milliseconds, note)"""
+def new_song(name, tones):
+    """tones are list of tuples (length_in_milliseconds, tone)"""
     text = "song_t %s = {\n" %(name)
-    text += "    .length = %i,\n" %(len(notes))
-    text += "    .parts = {\n"
-    for note in notes:
-        length = int(note[0]/1000.0*samples_per_sec)
-        text += "        { .duration = %i, .note = &note_%s },\n" %(length, note[1])
+    text += "    .length = %i,\n" %(len(tones))
+    text += "    .notes = {\n"
+    for tone in tones:
+        length = int(tone[0]/1000.0*samples_per_sec)
+        text += "        { .duration = %i, .tone = &tone_%s },\n" %(length, tone[1])
     text += "    }\n"
     text += "};\n\n"
     return text
 
-def add_song(name, notes, c, h):
-    c.write(new_song(name, notes))
+def add_song(name, tones, c, h):
+    c.write(new_song(name, tones))
     h.write("extern song_t {};\n".format(name))
 
 c = open("music_defs.c", 'w')

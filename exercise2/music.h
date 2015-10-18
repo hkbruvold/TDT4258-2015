@@ -3,25 +3,25 @@
 
 #define SAMPLES 32768
 
-/* Struct holding the samples for a musical note */
+/* Struct holding the samples for a musical tone */
 typedef struct
 {
     unsigned int length;
     unsigned short samples[];
-} note_t;
+} tone_t;
 
-/* Struct holding information on a part of a song (a note and a duration) */
+/* Struct holding information on a note of a song (a tone and a duration) */
 typedef struct
 {
-    note_t *note;
+    tone_t *tone;
     unsigned int duration;  // duration in samples
-} song_part_t;
+} note_t;
 
-/* Struct describing a song (an array of song parts) */
+/* Struct describing a song (an array of notes) */
 typedef struct
 {
     unsigned int length;
-    song_part_t parts[];
+    note_t notes[];
 } song_t;
 
 void play_song(song_t *song);
