@@ -1,0 +1,10 @@
+# LETIMER
+idle: 200 uA
+playing music: 3.32 mA
+playing sound effect: 3.91 mA
+
+
+# TIMER
+idle: 1.60 mA
+playing music: 3.24 mA
+playing sound effect: 3.67 mA
