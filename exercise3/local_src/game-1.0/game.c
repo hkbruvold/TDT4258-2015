@@ -10,10 +10,7 @@ int main(int argc, char *argv[])
 	
 	setupFB();
 	
-	color_t col;
-	col.red = 0b00000;
-	col.green = 0b111111;
-	col.blue = 0b00000;
+	uint16_t col = COLOR(0b11111, 0b000000, 0b11111);
 	drawRect(120, 100, 80, 50, &col);
 	
 	exit(EXIT_SUCCESS);

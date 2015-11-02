@@ -36,13 +36,13 @@ void clearScreen()
   updateRect(0, 0, 320, 240);
 }
 
-void drawRect(int x0, int y0, int width, int height, color_t *col)
+void drawRect(int x0, int y0, int width, int height, uint16_t *col)
 {
   int y;
   int x;
   for (y = y0; y <= y0+height; y++){
     for (x = x0; x <= x0+width; x++){
-      screen[320*y+x] = col;
+      screen[320*y+x] = *col;
     }
   }
   updateRect(x0, y0, width, height);
