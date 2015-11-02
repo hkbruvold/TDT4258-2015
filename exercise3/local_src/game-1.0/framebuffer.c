@@ -7,12 +7,15 @@
 #include <sys/mman.h> // for mmap
 #include <string.h> // for memset
 
+#include "framebuffer.h"
+
+int fd;
 uint16_t *screen;
 struct fb_copyarea rect;
 
 void setupFB()
 {
-	int fd = open("/dev/fb0", O_RDWR);
+	fd = open("/dev/fb0", O_RDWR);
 	
 	screen = mmap(0, 320*240*2, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 	clearScreen();

@@ -13,6 +13,8 @@ LDFLAGS +=
 
 all: game
 
+game: framebuffer.o
+
 clean:
 	-rm -f game
 
