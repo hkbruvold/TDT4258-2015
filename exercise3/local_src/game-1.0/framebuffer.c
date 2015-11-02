@@ -15,23 +15,35 @@ struct fb_copyarea rect;
 
 void setupFB()
 {
-	fd = open("/dev/fb0", O_RDWR);
-	
-	screen = mmap(0, 320*240*2, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-	clearScreen();
+  fd = open("/dev/fb0", O_RDWR);
+  
+  screen = mmap(0, 320*240*2, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+  clearScreen();
 }
 
 void updateRect(int dx, int dy, int width, int height)
 {
-	rect.dx = dx;
-	rect.dy = dy;
-	rect.width = width;
-	rect.height = height;
-	ioctl(fd, 0x4680, &rect);
+  rect.dx = dx;
+  rect.dy = dy;
+  rect.width = width;
+  rect.height = height;
+  ioctl(fd, 0x4680, &rect);
 }
 
 void clearScreen()
 {
-	memset(screen, 0xff, 320*240*2);
-	updateRect(0, 0, 320, 240);
+  memset(screen, 0x00, 320*240*2);
+  updateRect(0, 0, 320, 240);
+}
+
+void drawRect(int x0, int y0, int width, int height, color_t *col)
+{
+  int y;
+  int x;
+  for (y = y0; y <= y0+height; y++){
+    for (x = x0; x <= x0+width; x++){
+      screen[320*y+x] = col;
+    }
+  }
+  updateRect(x0, y0, width, height);
 }
