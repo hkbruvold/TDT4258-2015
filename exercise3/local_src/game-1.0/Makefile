@@ -11,7 +11,7 @@ CPPFLAGS +=
 LDFLAGS +=
 
 
-all: game
+all: game framebuffer
 
 clean:
 	-rm -f game
