@@ -5,6 +5,11 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
+#include <linux/fs.h>
+
+static dev_t chrdev;
+
+#define NUM_MINOR (0)
 
 static int gamepad_open(struct inode *inode, struct file *filp)
 {
@@ -46,6 +51,9 @@ static ssize_t gamepad_write(struct file *filp, const char __user *buff,
 
 static int __init gamepad_init(void)
 {
+    // allocate character device with dynamic major number
+    int foo = alloc_chrdev_region(&chrdev, 0, NUM_MINOR, "tdt4258-gamepad");
+
     printk("Hello World, here is your module speaking\n");
     return 0;
 }
@@ -59,6 +67,8 @@ static int __init gamepad_init(void)
 
 static void __exit gamepad_cleanup(void)
 {
+    unregister_chrdev_region(chrdev, NUM_MINOR);
+
     printk("Short life for a small module...\n");
 }
 
