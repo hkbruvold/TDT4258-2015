@@ -1,7 +1,3 @@
-/*
- * This is a demo Linux kernel module.
- */
-
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
@@ -10,6 +6,7 @@
 static dev_t chrdev;
 
 #define NUM_MINOR (0)
+#define CHRDEV_NAME ("gamepad")
 
 static int gamepad_open(struct inode *inode, struct file *filp)
 {
@@ -40,33 +37,27 @@ static ssize_t gamepad_write(struct file *filp, const char __user *buff,
     return 0;
 }
 
-/*
- * template_init - function to insert this module into kernel space
- *
- * This is the first of two exported functions to handle inserting this
- * code into a running kernel
- *
- * Returns 0 if successfull, otherwise -1
- */
-
 static int __init gamepad_init(void)
 {
-    // allocate character device with dynamic major number
-    int foo = alloc_chrdev_region(&chrdev, 0, NUM_MINOR, "tdt4258-gamepad");
-
     printk("Hello World, here is your module speaking\n");
+
+    // allocate character device with dynamic major number
+    int err = alloc_chrdev_region(&chrdev, 0, NUM_MINOR, CHRDEV_NAME);
+    if (err < 0)
+        printk("Failed to allocate character device (error %d)\n", err);
+    else
+        printk("Major number %d, minor number %d\n",
+                MAJOR(chrdev), MINOR(chrdev));
+
     return 0;
 }
 
-/*
- * template_cleanup - function to cleanup this module from kernel space
- *
- * This is the second of two exported functions to handle cleanup this
- * code from a running kernel
- */
-
 static void __exit gamepad_cleanup(void)
 {
+    printk("Unregistering chrdev major number %d, minor number %d\n",
+            MAJOR(chrdev), MINOR(chrdev));
+
+    // TODO: this doesn't seem to work
     unregister_chrdev_region(chrdev, NUM_MINOR);
 
     printk("Short life for a small module...\n");
