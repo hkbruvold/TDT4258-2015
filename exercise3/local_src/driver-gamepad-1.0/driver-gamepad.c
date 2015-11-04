@@ -46,14 +46,15 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
 {
     // user tries to read count bytes at offset from filp to buff
 
-    kk
-
-    return 0;
+    uint32_t data = ioread32(GPIO_PC_DIN);
+    copy_to_user(buff, &data, 1);
+    return 1;
 }
 
 static ssize_t gamepad_write(struct file *filp, const char __user *buff,
                              size_t count, loff_t *offp)
 {
+    //dont neeed
     return 0;
 }
 
