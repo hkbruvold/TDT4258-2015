@@ -11,6 +11,14 @@ static struct cdev *char_device;
 static char gpio_buffer[256];
 static uint16_t gpio_buffer_pos;
 
+static struct file_operations fops = {
+       owner: THIS_MODULE,
+       open: gamepad_open,
+       release: gamepad_release
+       read: gamepad_read,
+       write: gamepad_write,
+};
+
 #define NUM_MINOR (1)
 #define CHRDEV_NAME ("gamepad")
 
@@ -61,9 +69,12 @@ static int __init gamepad_init(void)
         printk("Allocated device with major number %d, minor number %d\n",
                 MAJOR(device), MINOR(device));
 
+    //init cdev
+    cdev_init(&device, &fops);
+    //@Håvard: cdev_alloc is old, init is new and described in compendium 
     // create cdev struct
-    char_device = cdev_alloc();
-    char_device->owner = THIS_MODULE;
+    //char_device = cdev_alloc();
+    //char_device->owner = THIS_MODULE;
     // cdev->ops = &fops;
 
     err = cdev_add(char_device, device, NUM_MINOR);
@@ -83,6 +94,10 @@ static void __exit gamepad_cleanup(void)
 
     printk("Short life for a small module...\n");
 }
+
+//create device file
+cl = class_create(THIS_MODULE, "gamepad-class")
+device_create(cl,NULL, device,NULL, "gamepad-class")
 
 module_init(gamepad_init);
 module_exit(gamepad_cleanup);
