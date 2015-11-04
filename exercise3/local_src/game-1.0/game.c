@@ -32,10 +32,10 @@ void gameloop()
 	while (msSince(lastTime)<1000);
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastTime);
 	
-	drawRect(50+dp/2, 40+dp/2, 100+dp, 100+dp, curcol);
+	drawRect(50+dp/2, 40+dp/2, 100-dp, 100-dp, curcol);
 	
 	dp += 10;
-	if (dp > 80) {
+	if (dp >= 80) {
 	    break;
 	}
 	if (*curcol == white) {
