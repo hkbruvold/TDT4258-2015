@@ -35,7 +35,7 @@ void gameloop()
 	drawRect(50+dp/2, 40+dp/2, 100-dp, 100-dp, curcol);
 	
 	dp += 10;
-	if (dp >= 80) {
+	if (dp >= 90) {
 	    break;
 	}
 	if (*curcol == white) {
