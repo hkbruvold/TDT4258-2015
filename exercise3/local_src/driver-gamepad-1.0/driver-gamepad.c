@@ -8,7 +8,7 @@
 #include "efm32gg.h"
 
 static dev_t device;
-static struct cdev *char_device;
+static struct cdev char_device;
 
 static char gpio_buffer[256];
 static uint16_t gpio_buffer_pos;
@@ -84,7 +84,7 @@ static int __init gamepad_init(void)
                 MAJOR(device), MINOR(device));
 
     //init cdev
-    cdev_init(&device, &fops);
+    cdev_init(&char_device, &fops);
 
     err = cdev_add(char_device, device, NUM_MINOR);
     if (err < 0)
