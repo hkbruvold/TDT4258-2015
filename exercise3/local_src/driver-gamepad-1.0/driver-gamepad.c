@@ -121,8 +121,8 @@ static void __exit gamepad_cleanup(void)
 
     unregister_chrdev_region(device_number, NUM_MINOR);
     cdev_del(&char_device);
-    class_destroy(cl);
     device_destroy(cl, device_number);
+    class_destroy(cl);
 
     printk("Short life for a small module...\n");
 }
