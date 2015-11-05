@@ -4,6 +4,7 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <asm/uaccess.h>
+#include <asm/io.h>
 
 #include "efm32gg.h"
 
