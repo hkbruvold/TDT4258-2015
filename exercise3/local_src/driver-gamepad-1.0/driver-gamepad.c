@@ -37,13 +37,15 @@ static struct file_operations fops = {
 
 static int gamepad_open(struct inode *inode, struct file *filp)
 {
-    // TODO: initialize interrupts for GPIO
+    // TODO: enable GPIO interrupts
+    printk("Gamepad open\n");
     return 0;
 }
 
 static int gamepad_release(struct inode *inode, struct file *filp)
 {
     // TODO: turn off interrupts for GPIO
+    printk("Gamepad close\n");
     return 0;
 }
 
@@ -74,7 +76,7 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
 static ssize_t gamepad_write(struct file *filp, const char __user *buff,
                              size_t count, loff_t *offp)
 {
-    //dont neeed
+    //dont need
     return 0;
 }
 
