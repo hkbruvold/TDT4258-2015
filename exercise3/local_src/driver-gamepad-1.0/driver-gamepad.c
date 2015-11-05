@@ -32,7 +32,6 @@ static struct file_operations fops = {
     .open = gamepad_open,
     .release = gamepad_release,
     .read = gamepad_read,
-    .write = gamepad_write
 };
 
 static int gamepad_open(struct inode *inode, struct file *filp)
@@ -82,13 +81,6 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
     
 }
 
-static ssize_t gamepad_write(struct file *filp, const char __user *buff,
-                             size_t count, loff_t *offp)
-{
-    //dont need
-    return 0;
-}
-
 static int __init gamepad_init(void)
 {
     int err;
@@ -103,12 +95,14 @@ static int __init gamepad_init(void)
         printk("Allocated device with major number %d, minor number %d\n",
                 MAJOR(device_number), MINOR(device_number));
 
+    /*
     // initialise GPIO
     *CMU_HFPERCLKEN0 |= CMU2_HFPERCLKEN0_GPIO; // enable GPIO clock
 
     *GPIO_PC_MODEL = 0x33333333; // set pins to input with filter
     *GPIO_PC_DOUT |= 0xFF; // set pin to be pull-up
-    
+    */
+
     //init cdev
     cdev_init(&char_device, &fops);
 
@@ -125,9 +119,7 @@ static int __init gamepad_init(void)
 
 static void __exit gamepad_cleanup(void)
 {
-    printk("Unregistering device with major number %d, minor number %d\n",
-            MAJOR(device_number), MINOR(device_number));
-
+    // unregister, delete and destroy everything
     unregister_chrdev_region(device_number, NUM_MINOR);
     cdev_del(&char_device);
     device_destroy(cl, device_number);
@@ -138,7 +130,7 @@ static void __exit gamepad_cleanup(void)
 
 
 module_init(gamepad_init);
-module_exit(gamepad_cleanup); 
+module_exit(gamepad_cleanup);
 MODULE_DESCRIPTION("TDT4258 Gamepad driver");
 MODULE_LICENSE("GPL");
 
