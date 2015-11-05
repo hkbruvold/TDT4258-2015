@@ -59,11 +59,16 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
 {
     // user tries to read count bytes at offset from filp to buff
 
-    uint32_t data;
+    copy_to_user(buff, "hello, world", 12);
 
+    return 12;
+
+    /*
+    uint32_t data;
     data = ioread32(GPIO_PC_DIN);
     copy_to_user(buff, &data, 1);
     return 1;
+    */
 }
 
 static ssize_t gamepad_write(struct file *filp, const char __user *buff,
@@ -114,6 +119,8 @@ static void __exit gamepad_cleanup(void)
 
     unregister_chrdev_region(device_number, NUM_MINOR);
     cdev_del(&char_device);
+    class_destroy(cl);
+    device_destroy(cl, device_number);
 
     printk("Short life for a small module...\n");
 }
