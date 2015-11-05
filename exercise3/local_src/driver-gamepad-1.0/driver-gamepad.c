@@ -5,6 +5,8 @@
 #include <linux/cdev.h>
 #include <asm/uaccess.h>
 
+#include "efm32gg.h"
+
 static dev_t device;
 static struct cdev *char_device;
 
