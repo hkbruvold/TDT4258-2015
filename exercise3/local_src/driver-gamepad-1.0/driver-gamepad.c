@@ -9,12 +9,12 @@
 
 #include "efm32gg.h"
 
+#define NUM_MINOR (1)
+#define DEVICE_NAME ("gamepad")
+
 static dev_t device_number;
 static struct cdev char_device;
 struct class *cl;
-
-static char gpio_buffer[256];
-static uint16_t gpio_buffer_pos;
 
 /* declare functions */
 static int gamepad_open(struct inode *inode, struct file *filp);
@@ -34,9 +34,6 @@ static struct file_operations fops = {
     .read = gamepad_read,
     .write = gamepad_write
 };
-
-#define NUM_MINOR (1)
-#define CHRDEV_NAME ("gamepad")
 
 static int gamepad_open(struct inode *inode, struct file *filp)
 {
@@ -61,7 +58,9 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
                             size_t count, loff_t *offp)
 {
     // user tries to read count bytes at offset from filp to buff
+
     uint32_t data;
+
     data = ioread32(GPIO_PC_DIN);
     copy_to_user(buff, &data, 1);
     return 1;
@@ -77,10 +76,11 @@ static ssize_t gamepad_write(struct file *filp, const char __user *buff,
 static int __init gamepad_init(void)
 {
     int err;
+
     printk("Hello World, here is your module speaking\n");
 
     // allocate character device with dynamic major number and one minor number
-    err = alloc_chrdev_region(&device_number, 0, NUM_MINOR, CHRDEV_NAME);
+    err = alloc_chrdev_region(&device_number, 0, NUM_MINOR, DEVICE_NAME);
     if (err < 0)
         printk("Failed to allocate character device (error %d)\n", err);
     else
@@ -101,8 +101,8 @@ static int __init gamepad_init(void)
         printk("Failed to add cdev\n");
 
     //create device file
-    cl = class_create(THIS_MODULE, "gamepad");
-    device_create(cl, NULL, device_number, NULL, "gamepad");
+    cl = class_create(THIS_MODULE, DEVICE_NAME);
+    device_create(cl, NULL, device_number, NULL, DEVICE_NAME);
 
     return 0;
 }
