@@ -3,7 +3,7 @@
 #include <linux/init.h>
 #include <linux/fs.h>
 #include <linux/cdev.h>
-#include <asm/uacccess.h>
+#include <asm/uaccess.h>
 
 static dev_t device;
 static struct cdev *char_device;
@@ -11,6 +11,17 @@ static struct cdev *char_device;
 static char gpio_buffer[256];
 static uint16_t gpio_buffer_pos;
 
+/* declare functions */
+static int gamepad_open(struct inode *inode, struct file *filp);
+static int gamepad_release(struct inode *inode, struct file *filp);
+static ssize_t gamepad_read(struct file *filp, char __user *buff,
+                            size_t count, loff_t *offp);
+static ssize_t gamepad_write(struct file *filp, const char __user *buff,
+                             size_t count, loff_t *offp);
+static int __init gamepad_init(void);
+static void __exit gamepad_cleanup(void);
+
+/* file operations struct */
 static struct file_operations fops = {
     .owner = THIS_MODULE,
     .open = gamepad_open,
