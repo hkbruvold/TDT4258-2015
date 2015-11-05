@@ -11,7 +11,7 @@
 
 static dev_t device_number;
 static struct cdev char_device;
-struct class *class;
+struct class *cl;
 
 static char gpio_buffer[256];
 static uint16_t gpio_buffer_pos;
@@ -93,6 +93,10 @@ static int __init gamepad_init(void)
     if (err < 0)
         printk("Failed to add cdev\n");
 
+    //create device file
+    cl = class_create(THIS_MODULE, "gamepad");
+    device_create(cl, NULL, device_number, NULL, "gamepad");
+
     return 0;
 }
 
@@ -107,9 +111,6 @@ static void __exit gamepad_cleanup(void)
     printk("Short life for a small module...\n");
 }
 
-//create device file
-class = class_create(THIS_MODULE, "gamepad");
-device_create(class, NULL, device_number, NULL, "gamepad");
 
 module_init(gamepad_init);
 module_exit(gamepad_cleanup); 
