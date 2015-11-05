@@ -85,11 +85,6 @@ static int __init gamepad_init(void)
 
     //init cdev
     cdev_init(&device, &fops);
-    //@Håvard: cdev_alloc is old, init is new and described in compendium 
-    // create cdev struct
-    //char_device = cdev_alloc();
-    //char_device->owner = THIS_MODULE;
-    // cdev->ops = &fops;
 
     err = cdev_add(char_device, device, NUM_MINOR);
     if (err < 0)
