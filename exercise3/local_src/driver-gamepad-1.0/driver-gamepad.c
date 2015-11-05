@@ -3,13 +3,15 @@
 #include <linux/init.h>
 #include <linux/fs.h>
 #include <linux/cdev.h>
+#include <linux/device.h>
 #include <asm/uaccess.h>
 #include <asm/io.h>
 
 #include "efm32gg.h"
 
-static dev_t device;
-static struct cdev *char_device;
+static dev_t device_number;
+static struct cdev char_device;
+struct class *class;
 
 static char gpio_buffer[256];
 static uint16_t gpio_buffer_pos;
@@ -77,17 +79,17 @@ static int __init gamepad_init(void)
     printk("Hello World, here is your module speaking\n");
 
     // allocate character device with dynamic major number and one minor number
-    int err = alloc_chrdev_region(&device, 0, NUM_MINOR, CHRDEV_NAME);
+    int err = alloc_chrdev_region(&device_number, 0, NUM_MINOR, CHRDEV_NAME);
     if (err < 0)
         printk("Failed to allocate character device (error %d)\n", err);
     else
         printk("Allocated device with major number %d, minor number %d\n",
-                MAJOR(device), MINOR(device));
+                MAJOR(device_number), MINOR(device_number));
 
     //init cdev
-    cdev_init(&device, &fops);
+    cdev_init(&char_device, &fops);
 
-    err = cdev_add(char_device, device, NUM_MINOR);
+    err = cdev_add(&char_device, device_number, NUM_MINOR);
     if (err < 0)
         printk("Failed to add cdev\n");
 
@@ -97,21 +99,20 @@ static int __init gamepad_init(void)
 static void __exit gamepad_cleanup(void)
 {
     printk("Unregistering device with major number %d, minor number %d\n",
-            MAJOR(device), MINOR(device));
+            MAJOR(device_number), MINOR(device_number));
 
-    unregister_chrdev_region(device, NUM_MINOR);
-    cdev_del(char_device);
+    unregister_chrdev_region(device_number, NUM_MINOR);
+    cdev_del(&char_device);
 
     printk("Short life for a small module...\n");
 }
 
 //create device file
-cl = class_create(THIS_MODULE, "gamepad-class")
-device_create(cl,NULL, device,NULL, "gamepad-class")
+class = class_create(THIS_MODULE, "gamepad");
+device_create(class, NULL, device_number, NULL, "gamepad");
 
 module_init(gamepad_init);
-module_exit(gamepad_cleanup);
-
+module_exit(gamepad_cleanup); 
 MODULE_DESCRIPTION("TDT4258 Gamepad driver");
 MODULE_LICENSE("GPL");
 
