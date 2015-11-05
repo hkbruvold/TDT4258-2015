@@ -12,11 +12,11 @@ static char gpio_buffer[256];
 static uint16_t gpio_buffer_pos;
 
 static struct file_operations fops = {
-       owner: THIS_MODULE,
-       open: gamepad_open,
-       release: gamepad_release
-       read: gamepad_read,
-       write: gamepad_write,
+    .owner = THIS_MODULE,
+    .open = gamepad_open,
+    .release = gamepad_release
+    .read = gamepad_read,
+    .write = gamepad_write
 };
 
 #define NUM_MINOR (1)
