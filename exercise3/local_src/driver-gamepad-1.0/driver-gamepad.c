@@ -25,7 +25,7 @@ static void __exit gamepad_cleanup(void);
 static struct file_operations fops = {
     .owner = THIS_MODULE,
     .open = gamepad_open,
-    .release = gamepad_release
+    .release = gamepad_release,
     .read = gamepad_read,
     .write = gamepad_write
 };
@@ -56,8 +56,8 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
                             size_t count, loff_t *offp)
 {
     // user tries to read count bytes at offset from filp to buff
-
-    uint32_t data = ioread32(GPIO_PC_DIN);
+    uint32_t data;
+    data = ioread32(GPIO_PC_DIN);
     copy_to_user(buff, &data, 1);
     return 1;
 }
