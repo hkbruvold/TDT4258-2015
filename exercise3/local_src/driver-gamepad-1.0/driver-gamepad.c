@@ -94,12 +94,14 @@ static int __init gamepad_init(void)
         printk("Allocated device with major number %d, minor number %d\n",
                 MAJOR(device_number), MINOR(device_number));
 
+    /*
     // initialise GPIO
     *CMU_HFPERCLKEN0 |= CMU2_HFPERCLKEN0_GPIO; // enable GPIO clock
 
     *GPIO_PC_MODEL = 0x33333333; // set pins to input with filter
     *GPIO_PC_DOUT |= 0xFF; // set pin to be pull-up
-    
+    */
+
     //init cdev
     cdev_init(&char_device, &fops);
 
@@ -129,7 +131,7 @@ static void __exit gamepad_cleanup(void)
 
 
 module_init(gamepad_init);
-module_exit(gamepad_cleanup); 
+module_exit(gamepad_cleanup);
 MODULE_DESCRIPTION("TDT4258 Gamepad driver");
 MODULE_LICENSE("GPL");
 
