@@ -76,10 +76,11 @@ static ssize_t gamepad_write(struct file *filp, const char __user *buff,
 
 static int __init gamepad_init(void)
 {
+    int err;
     printk("Hello World, here is your module speaking\n");
 
     // allocate character device with dynamic major number and one minor number
-    int err = alloc_chrdev_region(&device_number, 0, NUM_MINOR, CHRDEV_NAME);
+    err = alloc_chrdev_region(&device_number, 0, NUM_MINOR, CHRDEV_NAME);
     if (err < 0)
         printk("Failed to allocate character device (error %d)\n", err);
     else
