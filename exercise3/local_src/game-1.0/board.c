@@ -1,35 +1,30 @@
-#include <stdint.h>
-
 #include "board.h"
 
-uint32_t boardarray[2400]; // 320*240/32
+char boardarray[76800]; // 320*240
 
+// check for collision in given rectangle
 int checkRect(int x, int y, int width, int height)
 {
-    int indx = 320*y+x;
-    int rem = indx%32;
-    int newpos = 0;
-    uint32_t *pos = &boardarray[indx/32];
+    char *pos;
 
     int dx;
     int y0;
-    
-    // check all positions in rectangle
-    for (y0 = y; y <= y+height; y++) {
-	pos += (10-newpos)*sizeof(pos); // move to next row
-	newpos = 0;
+    for (y0 = y; y0 <= y+height; y0++) {
+	pos =  = &boardarray[320*y0+x];
 	for (dx = 0; dx <= width; dx++) {
-	     // if we go to next position in array
-	    if (rem - dx == 0) {
-		newpos++;
-		pos++;
-	    }
-	    // check for collision
-	    if (*pos & (1 << (32-rem+dx))) {
+	    if (*pos++ == 1) { // check for collision
 		return 1;
 	    }
 	}
     }
-    return 0
+    return 0;
 }
 
+// store rectangle in array
+void setRect(int x, int y, int width, int height)
+{
+    int y0;
+    for (y0 = y; y0 <= y+height; y0++) {
+	memset(&boardarray[320*y0+x], 1, width);
+    }
+}
