@@ -195,10 +195,6 @@ static int __init gamepad_init(void)
     if (err < 0)
         return err;
 
-    printk("foobar\n");
-
-    return -EBUSY;
-
     printk("Gamepad init success\n");
 
     return 0;
