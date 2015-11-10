@@ -84,12 +84,10 @@ int updatePlayers()
 {
     uint16_t blue = COLOR(0b00000, 0b000000, 0b11111);
     uint16_t red = COLOR(0b11111, 0b000000, 0b00000);
-    p1collide = 0;
-    p2collide = 0;
 
     // calculate new position
     player1.x += SPEED*coslist[player1.direction];
-    player1.y -= SPEED*sinlist[player1.direction];
+    player1.y -= SPEED*sinlist[player1.direction]; //substract because of positive y direction
     player2.x += SPEED*coslist[player2.direction];
     player2.y -= SPEED*sinlist[player2.direction];
 
