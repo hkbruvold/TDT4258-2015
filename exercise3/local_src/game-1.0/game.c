@@ -6,6 +6,7 @@
 
 #include "game.h"
 #include "framebuffer.h"
+#include "board.h"
 
 #define PI 3.14159265
 
@@ -55,9 +56,6 @@ void gameloop()
     // set value to keep game running
     running = 1;
     
-    uint16_t black = COLOR(0b00000, 0b000000, 0b00000);
-    uint16_t white = COLOR(0b11111, 0b111111, 0b11111);
-    
     struct timespec lastTime;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastTime);
     while (1) {
@@ -91,8 +89,10 @@ int updatePlayers()
     p2collide = 0;
 
     // calculate new position
-    player.x += SPEED*cos(player.direction);
-    player.y -= SPEED*sin(player.direction);
+    player1.x += SPEED*cos(player1.direction);
+    player1.y -= SPEED*sin(player1.direction);
+    player2.x += SPEED*cos(player2.direction);
+    player2.y -= SPEED*sin(player2.direction);
 
     // draw on screen
     drawRect((int) player1.x, (int) player1.y, SNAKE_WIDTH, SNAKE_WIDTH, &red);
