@@ -60,25 +60,20 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
 {
     // user tries to read count bytes at offset from filp to buff
 
-    /*copy_to_user(buff, "hello, world", 12);
-
-      return 12;*/
-
-    
     uint32_t data;
     int i;
-    char text[] = "00000000000000000000000000000000\n"; 
+    char text[] = "00000000000000000000000000000000\n";
     data = ioread32(GPIO_PC_DIN);
-    
+
     for (i = 0; i <= 31; i++) {
-	if (data & (1 << i)) {
-	    text[31-i] = '1';
-	}
+        if (data & (1 << i)) {
+            text[31-i] = '1';
+        }
     }
-    
+
     copy_to_user(buff, &text, sizeof(text));
     return sizeof(text);
-    
+
 }
 
 static int __init gamepad_init(void)
@@ -95,13 +90,13 @@ static int __init gamepad_init(void)
         printk("Allocated device with major number %d, minor number %d\n",
                 MAJOR(device_number), MINOR(device_number));
 
-    
+
     // initialise GPIO
     *CMU_HFPERCLKEN0 |= CMU2_HFPERCLKEN0_GPIO; // enable GPIO clock
 
     *GPIO_PC_MODEL = 0x33333333; // set pins to input with filter
     *GPIO_PC_DOUT |= 0xFF; // set pin to be pull-up
-    
+
 
     //init cdev
     cdev_init(&char_device, &fops);
