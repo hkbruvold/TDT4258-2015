@@ -105,6 +105,7 @@ static int gamepad_open(struct inode *inode, struct file *filp)
 
     if (dev_open_count == 0) // first open, enable interrupts
     {
+        // request IRQ lines
         err = request_irq(GPIO_EVEN_IRQ_NUM, &gpio_handler, 0, DEVICE_NAME, NULL);
         if (err < 0)
             return err;
@@ -171,11 +172,11 @@ static int __init gamepad_init(void)
 
     // create device file
     cl = class_create(THIS_MODULE, DEVICE_NAME);
-
     dev = device_create(cl, NULL, device_number, NULL, DEVICE_NAME);
     if (IS_ERR(dev))
         return PTR_ERR(dev);
 
+    // initialize GPIO
     err = gpio_init();
     if (err < 0)
         return err;
