@@ -4,10 +4,10 @@
 #include <linux/types.h>
 
 #define GPIO_PC_BASE     0x40006048
-#define GPIO_PC_LENGTH   0x24
+#define GPIO_PC_LENGTH   (GPIO_PINLOCKN + 4)
 
 #define GPIO_IRQ_BASE    0x40006100
-#define GPIO_IRQ_LENGTH  0x20
+#define GPIO_IRQ_LENGTH  (GPIO_IFC + 4)
 
 #define GPIO_CTRL        0x00
 #define GPIO_MODEL       0x04
