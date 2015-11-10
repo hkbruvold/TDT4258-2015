@@ -125,7 +125,7 @@ static int gamepad_release(struct inode *inode, struct file *filp)
 {
     --dev_open_count;
 
-    if (dev_open_count == 0) // disable interrupts
+    if (dev_open_count == 0) // disable interrupts on final release
     {
         iowrite32(0x0, gpio_irq + GPIO_IEN);
 
