@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "board.h"
 
 char boardarray[76800]; // 320*240
@@ -10,7 +12,7 @@ int checkRect(int x, int y, int width, int height)
     int dx;
     int y0;
     for (y0 = y; y0 <= y+height; y0++) {
-	pos =  = &boardarray[320*y0+x];
+	pos = &boardarray[320*y0+x];
 	for (dx = 0; dx <= width; dx++) {
 	    if (*pos++ == 1) { // check for collision
 		return 1;
