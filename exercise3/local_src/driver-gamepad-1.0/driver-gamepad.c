@@ -16,6 +16,8 @@ static dev_t device_number;
 static struct cdev char_device;
 struct class *cl;
 
+void *gpio_pc;
+
 /* declare functions */
 static int gamepad_open(struct inode *inode, struct file *filp);
 static int gamepad_release(struct inode *inode, struct file *filp);
@@ -40,11 +42,14 @@ static int __init gpio_init(void)
     if (request_mem_region(GPIO_PC_BASE, GPIO_PC_LENGTH, DEVICE_NAME) == NULL)
         return -EBUSY; // "device or resource busy"
 
+    // map the GPIO port C ports to memory
+    gpio_pc = ioremap_nocache(GPIO_PC_BASE, GPIO_PC_LENGTH);
+
     // set pins to input with filter
-    iowrite32(0x33333333, GPIO_PC_MODEL);
+    iowrite32(0x33333333, gpio_pc + GPIO_MODEL);
 
     // set pins to be pull-up
-    iowrite32(0xff, GPIO_PC_DOUT);
+    iowrite32(0xff, gpio_pc + GPIO_DOUT);
 
     return 0;
 }
@@ -52,6 +57,7 @@ static int __init gpio_init(void)
 static void __exit gpio_exit(void)
 {
     release_mem_region(GPIO_PC_BASE, GPIO_PC_LENGTH);
+    iounmap(gpio_pc);
 }
 
 static int gamepad_open(struct inode *inode, struct file *filp)
@@ -80,7 +86,7 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
 {
     // user tries to read count bytes at offset from filp to buff
 
-    char data = ioread8((void *)GPIO_PC_DIN);
+    char data = ioread8(gpio_pc + GPIO_DIN);
 
     copy_to_user(buff, &data, 1);
 
