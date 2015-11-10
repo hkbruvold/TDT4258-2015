@@ -4,21 +4,30 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
-#include <asm/uaccess.h>
-#include <asm/io.h>
+#include <linux/ioport.h>
+#include <linux/interrupt.h>
 
 #include "efm32gg.h"
 
 #define NUM_MINOR (1)
 #define DEVICE_NAME ("gamepad")
 
+// device structs
 static dev_t device_number;
 static struct cdev char_device;
-struct class *cl;
+static struct class *cl;
 
-void *gpio_pc;
+// mapped memory addresses
+static void *gpio_pc;
+static void *gpio_irq;
 
-/* declare functions */
+// open count for device file
+static unsigned int dev_open_count = 0;
+
+// cached GPIO pin data
+static char button_data;
+
+// function declarations
 static int gamepad_open(struct inode *inode, struct file *filp);
 static int gamepad_release(struct inode *inode, struct file *filp);
 static ssize_t gamepad_read(struct file *filp, char __user *buff,
@@ -28,13 +37,28 @@ static void __exit gpio_exit(void);
 static int __init gamepad_init(void);
 static void __exit gamepad_exit(void);
 
-/* file operations struct */
+static irqreturn_t gpio_handler(int irq, void *dev_id);
+
+// file operations for the device
 static struct file_operations fops = {
     .owner = THIS_MODULE,
     .open = gamepad_open,
     .release = gamepad_release,
     .read = gamepad_read,
 };
+
+// GPIO interrupt handler
+static irqreturn_t gpio_handler(int irq, void *dev_id)
+{
+    // cache button data
+    button_data = ioread8(gpio_pc + GPIO_DIN);
+
+    // clear the interrupt: write value of GPIO_IF to GPIO_IFC
+    iowrite32(ioread32(gpio_pc + GPIO_IF), gpio_pc + GPIO_IFC);
+
+    return IRQ_HANDLED;
+
+}
 
 static int __init gpio_init(void)
 {
@@ -45,32 +69,70 @@ static int __init gpio_init(void)
     // map the GPIO port C ports to memory
     gpio_pc = ioremap_nocache(GPIO_PC_BASE, GPIO_PC_LENGTH);
 
+    // request and map GPIO IRQ region
+    if (request_mem_region(GPIO_IRQ_BASE, GPIO_IRQ_LENGTH, DEVICE_NAME) == NULL)
+        return -EBUSY;
+    gpio_irq = ioremap_nocache(GPIO_IRQ_BASE, GPIO_PC_LENGTH);
+
     // set pins to input with filter
     iowrite32(0x33333333, gpio_pc + GPIO_MODEL);
 
     // set pins to be pull-up
     iowrite32(0xff, gpio_pc + GPIO_DOUT);
 
+    // set interrupt to use port C
+    iowrite32(0x22222222, gpio_irq + GPIO_EXTIPSELL);
+
+    // set interrupts to fire on rising and falling edge for pins 0-7
+    iowrite32(0xf, gpio_irq + GPIO_EXTIRISE);
+    iowrite32(0xf, gpio_irq + GPIO_EXTIFALL);
+
     return 0;
 }
 
 static void __exit gpio_exit(void)
 {
-    release_mem_region(GPIO_PC_BASE, GPIO_PC_LENGTH);
+    // unmap and release memory regions
     iounmap(gpio_pc);
+    iounmap(gpio_irq);
+    release_mem_region(GPIO_PC_BASE, GPIO_PC_LENGTH);
+    release_mem_region(GPIO_IRQ_BASE, GPIO_IRQ_LENGTH);
 }
 
 static int gamepad_open(struct inode *inode, struct file *filp)
 {
-    // TODO: enable GPIO interrupts
-    printk("Gamepad open\n");
+    int err;
+
+    if (dev_open_count == 0) // first open, enable interrupts
+    {
+        err = request_irq(GPIO_EVEN_IRQ_NUM, &gpio_handler, 0, DEVICE_NAME, NULL);
+        if (err < 0)
+            return err;
+        err = request_irq(GPIO_ODD_IRQ_NUM, &gpio_handler, 0, DEVICE_NAME, NULL);
+        if (err < 0)
+            return err;
+
+        // enable GPIO interrupts for pin 0-7
+        iowrite32(0xf, gpio_irq + GPIO_IEN);
+    }
+
+    ++dev_open_count;
+
     return 0;
 }
 
 static int gamepad_release(struct inode *inode, struct file *filp)
 {
-    // TODO: turn off interrupts for GPIO
-    printk("Gamepad close\n");
+    --dev_open_count;
+
+    if (dev_open_count == 0) // disable interrupts
+    {
+        iowrite32(0x0, gpio_irq + GPIO_IEN);
+
+        free_irq(GPIO_EVEN_IRQ_NUM, NULL);
+        free_irq(GPIO_ODD_IRQ_NUM, NULL);
+    }
+
     return 0;
 }
 
@@ -84,11 +146,8 @@ static int gamepad_release(struct inode *inode, struct file *filp)
 static ssize_t gamepad_read(struct file *filp, char __user *buff,
                             size_t count, loff_t *offp)
 {
-    // user tries to read count bytes at offset from filp to buff
-
-    char data = ioread8(gpio_pc + GPIO_DIN);
-
-    copy_to_user(buff, &data, 1);
+    // write a single byte, the GPIO button data
+    copy_to_user(buff, &button_data, 1);
 
     return 1;
 }
