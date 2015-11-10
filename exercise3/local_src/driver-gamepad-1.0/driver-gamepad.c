@@ -109,13 +109,21 @@ static int gamepad_open(struct inode *inode, struct file *filp)
         // request IRQ lines
         err = request_irq(GPIO_EVEN_IRQ_NUM, &gpio_handler, 0, DEVICE_NAME, NULL);
         if (err < 0)
+        {
+            printk("error %d\n", err);
             return err;
+        }
         err = request_irq(GPIO_ODD_IRQ_NUM, &gpio_handler, 0, DEVICE_NAME, NULL);
         if (err < 0)
+        {
+            printk("error %d\n", err);
             return err;
+        }
 
         // enable GPIO interrupts for pin 0-7
         iowrite32(0xf, gpio_irq + GPIO_IEN);
+
+        printk("Interrupts enabled\n");
     }
 
     ++dev_open_count;
@@ -133,6 +141,8 @@ static int gamepad_release(struct inode *inode, struct file *filp)
 
         free_irq(GPIO_EVEN_IRQ_NUM, NULL);
         free_irq(GPIO_ODD_IRQ_NUM, NULL);
+
+        printk("Interrupts disabled\n");
     }
 
     return 0;
@@ -148,6 +158,9 @@ static int gamepad_release(struct inode *inode, struct file *filp)
 static ssize_t gamepad_read(struct file *filp, char __user *buff,
                             size_t count, loff_t *offp)
 {
+    if (count == 0)
+        return 0;
+
     // write a single byte, the GPIO button data
     copy_to_user(buff, &button_data, 1);
 
