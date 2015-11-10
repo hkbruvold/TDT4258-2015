@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
-#include <math.h>
 
 #include "game.h"
 #include "framebuffer.h"
@@ -18,7 +17,7 @@
 struct snake {
     double x;
     double y;
-    double direction;
+    int direction; // direction is between 0-29
 };
 
 void tick();
@@ -47,7 +46,7 @@ void gameloop()
     // initialise player positions
     player1.x = 80;
     player1.y = 120;
-    player1.direction = 180;
+    player1.direction = 15;
     
     player2.x = 240;
     player2.y = 120;
@@ -89,10 +88,10 @@ int updatePlayers()
     p2collide = 0;
 
     // calculate new position
-    player1.x += SPEED*cos(player1.direction);
-    player1.y -= SPEED*sin(player1.direction);
-    player2.x += SPEED*cos(player2.direction);
-    player2.y -= SPEED*sin(player2.direction);
+    player1.x += SPEED*coslist[player1.direction];
+    player1.y -= SPEED*sinlist[player1.direction];
+    player2.x += SPEED*coslist[player2.direction];
+    player2.y -= SPEED*sinlist[player2.direction];
 
     // draw on screen
     drawRect((int) player1.x, (int) player1.y, SNAKE_WIDTH, SNAKE_WIDTH, &red);
