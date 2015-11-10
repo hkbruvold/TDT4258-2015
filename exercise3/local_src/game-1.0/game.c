@@ -9,6 +9,8 @@
 
 #define PI 3.14159265
 
+// TICKTIME is time in nanoseconds between each tick
+#define TICKTIME 100000000
 // SPEED is pixels per tick
 #define SPEED 1 
 // SNAKE_WIDTH is diameter of snake
@@ -56,9 +58,13 @@ void gameloop()
     running = 1;
     
     struct timespec lastTime;
+    struct timespec newTime;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastTime);
     while (1) {
 	while (msSince(lastTime)<100); // TODO: replace with sleep
+	/*newTime = timespecSince(lastTime);
+	newTime.tv_nsec = TICKTIME - newTime.tv_nsec;
+	nanosleep(&newTime, NULL);*/
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastTime);
 	
 	tick();
@@ -110,7 +116,7 @@ int updatePlayers()
 }	
 
 // return difference in milliseconds from start to stop
-long getmsDiff(struct timespec start, struct timespec stop)
+long getmsDiff(struct timespec start, struct timespec stop) // TODO: remove when/if sleep works
 {
     long diff;
     diff = ((long) stop.tv_sec*1000 + stop.tv_nsec/1E6) 
@@ -120,7 +126,7 @@ long getmsDiff(struct timespec start, struct timespec stop)
 }
 
 // return elapsed time in millisecond since prev
-long msSince(struct timespec prev)
+long msSince(struct timespec prev) // TODO: remove when/if sleep works
 {
     struct timespec now;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
@@ -128,7 +134,7 @@ long msSince(struct timespec prev)
 }
 
 // return timespec struct with difference between start and stop
-struct timespec getTimeDiff(struct timespec start, struct timespec stop)
+struct timespec getTimespecDiff(struct timespec start, struct timespec stop)
 {
     struct timespec diffTime;
     diffTime.tv_sec = stop.tv_sec - start.tv_sec;
@@ -139,4 +145,12 @@ struct timespec getTimeDiff(struct timespec start, struct timespec stop)
 	diffTime.tv_nsec = stop.tv_nsec - start.tv_nsec;
     }
     return diffTime;
+}
+
+// return elapsed time in timespec struct since prev
+struct timespec timespecSince(struct timespec prev)
+{
+    struct timespec now;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
+    return getTimespecDiff(prev, now);
 }
