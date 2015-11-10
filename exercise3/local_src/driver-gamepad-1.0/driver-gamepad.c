@@ -34,6 +34,17 @@ static struct file_operations fops = {
     .read = gamepad_read,
 };
 
+// __init tells the compiler that the function is only used during init, and
+// frees the function memory when the module is loaded
+static void __init init_gpio()
+{
+    // initialise GPIO
+    *CMU_HFPERCLKEN0 |= CMU2_HFPERCLKEN0_GPIO; // enable GPIO clock
+
+    *GPIO_PC_MODEL = 0x33333333; // set pins to input with filter
+    *GPIO_PC_DOUT |= 0xFF; // set pin to be pull-up
+}
+
 static int gamepad_open(struct inode *inode, struct file *filp)
 {
     // TODO: enable GPIO interrupts
@@ -80,34 +91,26 @@ static int __init gamepad_init(void)
 {
     int err;
 
-    printk("Hello World, here is your module speaking\n");
-
     // allocate character device with dynamic major number and one minor number
     err = alloc_chrdev_region(&device_number, 0, NUM_MINOR, DEVICE_NAME);
     if (err < 0)
-        printk("Failed to allocate character device (error %d)\n", err);
-    else
-        printk("Allocated device with major number %d, minor number %d\n",
-                MAJOR(device_number), MINOR(device_number));
+        return err;
 
-
-    // initialise GPIO
-    *CMU_HFPERCLKEN0 |= CMU2_HFPERCLKEN0_GPIO; // enable GPIO clock
-
-    *GPIO_PC_MODEL = 0x33333333; // set pins to input with filter
-    *GPIO_PC_DOUT |= 0xFF; // set pin to be pull-up
-
-
-    //init cdev
+    // init cdev
     cdev_init(&char_device, &fops);
 
     err = cdev_add(&char_device, device_number, NUM_MINOR);
     if (err < 0)
-        printk("Failed to add cdev\n");
+        return err;
 
-    //create device file
+    // create device file
     cl = class_create(THIS_MODULE, DEVICE_NAME);
-    device_create(cl, NULL, device_number, NULL, DEVICE_NAME);
+
+    struct device *dev = device_create(cl, NULL, device_number, NULL, DEVICE_NAME);
+    if (dev == ERR_PTR)
+        return dev;
+
+    init_gpio();
 
     return 0;
 }
@@ -122,7 +125,6 @@ static void __exit gamepad_cleanup(void)
 
     printk("Short life for a small module...\n");
 }
-
 
 module_init(gamepad_init);
 module_exit(gamepad_cleanup);
