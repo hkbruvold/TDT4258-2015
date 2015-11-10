@@ -21,8 +21,7 @@ static int gamepad_open(struct inode *inode, struct file *filp);
 static int gamepad_release(struct inode *inode, struct file *filp);
 static ssize_t gamepad_read(struct file *filp, char __user *buff,
                             size_t count, loff_t *offp);
-static ssize_t gamepad_write(struct file *filp, const char __user *buff,
-                             size_t count, loff_t *offp);
+static void __init gpio_init(void);
 static int __init gamepad_init(void);
 static void __exit gamepad_cleanup(void);
 
@@ -36,7 +35,7 @@ static struct file_operations fops = {
 
 // __init tells the compiler that the function is only used during init, and
 // frees the function memory when the module is loaded
-static void __init init_gpio()
+static void __init gpio_init(void)
 {
     // initialise GPIO
     *CMU_HFPERCLKEN0 |= CMU2_HFPERCLKEN0_GPIO; // enable GPIO clock
@@ -71,25 +70,17 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
 {
     // user tries to read count bytes at offset from filp to buff
 
-    uint32_t data;
-    int i;
-    char text[] = "00000000000000000000000000000000\n";
-    data = ioread32(GPIO_PC_DIN);
+    char data = ioread8((void *)GPIO_PC_DIN);
 
-    for (i = 0; i <= 31; i++) {
-        if (data & (1 << i)) {
-            text[31-i] = '1';
-        }
-    }
+    copy_to_user(buff, &data, 1);
 
-    copy_to_user(buff, &text, sizeof(text));
-    return sizeof(text);
-
+    return 1;
 }
 
 static int __init gamepad_init(void)
 {
     int err;
+    struct device *dev;
 
     // allocate character device with dynamic major number and one minor number
     err = alloc_chrdev_region(&device_number, 0, NUM_MINOR, DEVICE_NAME);
@@ -106,11 +97,11 @@ static int __init gamepad_init(void)
     // create device file
     cl = class_create(THIS_MODULE, DEVICE_NAME);
 
-    struct device *dev = device_create(cl, NULL, device_number, NULL, DEVICE_NAME);
-    if (dev == ERR_PTR)
-        return dev;
+    dev = device_create(cl, NULL, device_number, NULL, DEVICE_NAME);
+    if (IS_ERR(dev))
+        return PTR_ERR(dev);
 
-    init_gpio();
+    gpio_init();
 
     return 0;
 }
