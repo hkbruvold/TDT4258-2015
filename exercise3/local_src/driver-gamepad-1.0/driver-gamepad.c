@@ -57,7 +57,6 @@ static irqreturn_t gpio_handler(int irq, void *dev_id)
     iowrite32(ioread32(gpio_pc + GPIO_IF), gpio_pc + GPIO_IFC);
 
     return IRQ_HANDLED;
-
 }
 
 static int __init gpio_init(void)
@@ -181,7 +180,7 @@ static int __init gamepad_init(void)
     if (err < 0)
         return err;
 
-    printk("Gamepad init success");
+    printk("Gamepad init success\n");
 
     return 0;
 }
