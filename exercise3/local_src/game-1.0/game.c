@@ -126,3 +126,17 @@ long msSince(struct timespec prev)
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
     return getmsDiff(prev, now);
 }
+
+// return timespec struct with difference between start and stop
+struct timespec getTimeDiff(struct timespec start, struct timespec stop)
+{
+    struct timespec diffTime;
+    diffTime.tv_sec = stop.tv_sec - start.tv_sec;
+    if (stop.tv_nsec < start.tv_nsec) {
+	diffTime.tv_nsec = stop.tv_nsec + 1E9 - start.tv_nsec;
+	diffTime.tv_sec--;
+    } else {
+	diffTime.tv_nsec = stop.tv_nsec - start.tv_nsec;
+    }
+    return diffTime;
+}

@@ -8,5 +8,6 @@ static double coslist[] = {1.0, 0.978147600734, 0.913545457643, 0.809016994375, 
 void gameloop();
 long getmsDiff(struct timespec start, struct timespec stop);
 long msSince(struct timespec prev);
+struct timespec detTimeDiff(struct timespec start, struct timespec stop);
 
 #endif
