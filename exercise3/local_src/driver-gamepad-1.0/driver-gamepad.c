@@ -6,6 +6,8 @@
 #include <linux/device.h>
 #include <linux/ioport.h>
 #include <linux/interrupt.h>
+#include <asm/io.h>
+#include <asm/uaccess.h>
 
 #include "efm32gg.h"
 
