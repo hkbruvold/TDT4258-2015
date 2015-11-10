@@ -21,9 +21,10 @@ static int gamepad_open(struct inode *inode, struct file *filp);
 static int gamepad_release(struct inode *inode, struct file *filp);
 static ssize_t gamepad_read(struct file *filp, char __user *buff,
                             size_t count, loff_t *offp);
-static void __init gpio_init(void);
+static int __init gpio_init(void);
+static void __exit gpio_exit(void);
 static int __init gamepad_init(void);
-static void __exit gamepad_cleanup(void);
+static void __exit gamepad_exit(void);
 
 /* file operations struct */
 static struct file_operations fops = {
@@ -33,15 +34,24 @@ static struct file_operations fops = {
     .read = gamepad_read,
 };
 
-// __init tells the compiler that the function is only used during init, and
-// frees the function memory when the module is loaded
-static void __init gpio_init(void)
+static int __init gpio_init(void)
 {
-    // initialise GPIO
-    *CMU_HFPERCLKEN0 |= CMU2_HFPERCLKEN0_GPIO; // enable GPIO clock
+    // request exclusive access to the GPIO port C memory region
+    if (request_mem_region(GPIO_PC_BASE, GPIO_PC_LENGTH, DEVICE_NAME) == NULL)
+        return -EBUSY; // "device or resource busy"
 
-    *GPIO_PC_MODEL = 0x33333333; // set pins to input with filter
-    *GPIO_PC_DOUT |= 0xFF; // set pin to be pull-up
+    // set pins to input with filter
+    iowrite32(0x33333333, GPIO_PC_MODEL);
+
+    // set pins to be pull-up
+    iowrite32(0xff, GPIO_PC_DOUT);
+
+    return 0;
+}
+
+static void __exit gpio_exit(void)
+{
+    release_mem_region(GPIO_PC_BASE, GPIO_PC_LENGTH);
 }
 
 static int gamepad_open(struct inode *inode, struct file *filp)
@@ -101,24 +111,29 @@ static int __init gamepad_init(void)
     if (IS_ERR(dev))
         return PTR_ERR(dev);
 
-    gpio_init();
+    err = gpio_init();
+    if (err < 0)
+        return err;
+
+    printk("Gamepad init success");
 
     return 0;
 }
 
-static void __exit gamepad_cleanup(void)
+static void __exit gamepad_exit(void)
 {
     // unregister, delete and destroy everything
     unregister_chrdev_region(device_number, NUM_MINOR);
     cdev_del(&char_device);
     device_destroy(cl, device_number);
     class_destroy(cl);
+    gpio_exit();
 
     printk("Short life for a small module...\n");
 }
 
 module_init(gamepad_init);
-module_exit(gamepad_cleanup);
+module_exit(gamepad_exit);
 MODULE_DESCRIPTION("TDT4258 Gamepad driver");
 MODULE_LICENSE("GPL");
 
