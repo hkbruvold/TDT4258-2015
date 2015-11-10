@@ -13,7 +13,7 @@ LDFLAGS +=
 
 all: game
 
-game: framebuffer.o
+game: framebuffer.o board.o
 
 clean:
 	-rm -f game
