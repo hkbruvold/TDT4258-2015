@@ -49,9 +49,10 @@ static irqreturn_t gpio_handler(int irq, void *dev_id);
 // file operations for the device
 static struct file_operations fops = {
     .owner = THIS_MODULE,
-    .open = gamepad_open,
-    .release = gamepad_release,
-    .read = gamepad_read,
+    .open = &gamepad_open,
+    .release = &gamepad_release,
+    .fasync = &gamepad_fasync,
+    .read = &gamepad_read
 };
 
 // GPIO interrupt handler
