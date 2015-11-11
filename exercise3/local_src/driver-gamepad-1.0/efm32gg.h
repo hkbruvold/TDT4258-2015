@@ -3,6 +3,8 @@
 
 #include <linux/types.h>
 
+// platform device GPIO start address: 0x400061FF
+
 #define GPIO_PC_BASE     0x40006048
 #define GPIO_PC_LENGTH   (GPIO_PINLOCKN + 4)
 
@@ -27,9 +29,6 @@
 #define GPIO_IF          0x14
 #define GPIO_IFS         0x18
 #define GPIO_IFC         0x1c
-
-#define GPIO_EVEN_IRQ_NUM  17
-#define GPIO_ODD_IRQ_NUM   18
 
 #endif // EFM32GG_h
 
