@@ -6,6 +6,7 @@
 #include "game.h"
 #include "framebuffer.h"
 #include "board.h"
+#include "gamepad.h"
 
 #define PI 3.14159265
 
@@ -37,6 +38,7 @@ int main(int argc, char *argv[])
     printf("Hello World, I'm game!\n");
 	
     setupFB();
+    setupGamepad();
     
     gameloop();
 	
@@ -78,6 +80,7 @@ void tick()
     if (running) {
 	if (updatePlayers()) {
 	    // when a collision is not deteted
+	    printf("%i\n", readGamepad());
 	    turnPlayer(&player1, 1);
 	    turnPlayer(&player2, -1);
 	} else {
