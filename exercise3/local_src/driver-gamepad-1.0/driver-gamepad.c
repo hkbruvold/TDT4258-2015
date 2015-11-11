@@ -64,8 +64,7 @@ static struct file_operations fops = {
 };
 
 static struct of_device_id gamepad_of_match[] = {
-    { .compatible = "tdt4258" },
-    {}
+    { .compatible = "tdt4258" }
 };
 
 static struct platform_driver gamepad_driver = {
