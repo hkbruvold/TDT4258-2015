@@ -85,8 +85,8 @@ static int __init gpio_init(void)
     iowrite32(0x22222222, gpio_irq + GPIO_EXTIPSELL);
 
     // set interrupts to fire on rising and falling edge for pins 0-7
-    iowrite32(0xf, gpio_irq + GPIO_EXTIRISE);
-    iowrite32(0xf, gpio_irq + GPIO_EXTIFALL);
+    iowrite32(0xff, gpio_irq + GPIO_EXTIRISE);
+    iowrite32(0xff, gpio_irq + GPIO_EXTIFALL);
 
     return 0;
 }
@@ -121,7 +121,7 @@ static int gamepad_open(struct inode *inode, struct file *filp)
         }
 
         // enable GPIO interrupts for pin 0-7
-        iowrite32(0xf, gpio_irq + GPIO_IEN);
+        iowrite32(0xff, gpio_irq + GPIO_IEN);
 
         printk("Interrupts enabled\n");
     }
