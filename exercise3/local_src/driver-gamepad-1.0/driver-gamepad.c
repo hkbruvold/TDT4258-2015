@@ -104,7 +104,7 @@ static int gamepad_open(struct inode *inode, struct file *filp)
 {
     int err;
 
-    if (dev_open_count == 0) // first open, enable interrupts
+    if (0 && dev_open_count == 0) // first open, enable interrupts
     {
         // request IRQ lines
         err = request_irq(GPIO_EVEN_IRQ_NUM, &gpio_handler, 0, DEVICE_NAME, NULL);
@@ -135,7 +135,7 @@ static int gamepad_release(struct inode *inode, struct file *filp)
 {
     --dev_open_count;
 
-    if (dev_open_count == 0) // disable interrupts on final release
+    if (0 && dev_open_count == 0) // disable interrupts on final release
     {
         iowrite32(0x0, gpio_irq + GPIO_IEN);
 
@@ -199,11 +199,11 @@ static int __init gamepad_init(void)
 static void __exit gamepad_exit(void)
 {
     // unregister, delete and destroy everything
+    gpio_exit();
     unregister_chrdev_region(device_number, NUM_MINOR);
     cdev_del(&char_device);
     device_destroy(cl, device_number);
     class_destroy(cl);
-    gpio_exit();
 
     printk("Short life for a small module...\n");
 }
