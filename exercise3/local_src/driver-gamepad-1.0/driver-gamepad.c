@@ -25,6 +25,10 @@ static struct class *cl;
 static void *gpio_pc;
 static void *gpio_irq;
 
+// GPIO IRQ numbers
+static int gpio_irq_even;
+static int gpio_irq_odd;
+
 // open count for device file
 static unsigned int dev_open_count = 0;
 
@@ -63,10 +67,13 @@ static struct file_operations fops = {
     .read = &gamepad_read
 };
 
+// platform driver match table
 static struct of_device_id gamepad_of_match[] = {
-    { .compatible = "tdt4258" }
+    { .compatible = "tdt4258" },
+    {}
 };
 
+// platform driver information
 static struct platform_driver gamepad_driver = {
     .probe = gamepad_probe,
     .remove = gamepad_remove,
@@ -82,14 +89,15 @@ static int gamepad_probe(struct platform_device *platform_device)
     int err;
     struct device *dev;
 
+    // get the platform driver resource
     struct resource *resource =
         platform_get_resource(platform_device, IORESOURCE_MEM, 0);
 
-    int irq_even = platform_get_irq(platform_device, 0);
-    int irq_odd = platform_get_irq(platform_device, 1);
+    gpio_irq_even = platform_get_irq(platform_device, 0);
+    gpio_irq_odd = platform_get_irq(platform_device, 1);
 
     printk(KERN_DEBUG "GPIO start: %#llx end: %#llx\n", resource->start, resource->end);
-    printk(KERN_DEBUG "GPIO IRQ even: %d odd: %d\n", irq_even, irq_odd);
+    printk(KERN_DEBUG "GPIO IRQ even: %d odd: %d\n", gpio_irq_even, gpio_irq_odd);
 
     // allocate character device with dynamic major number and one minor number
     err = alloc_chrdev_region(&device_number, 0, NUM_MINOR, DEVICE_NAME);
@@ -187,10 +195,10 @@ static int gamepad_open(struct inode *inode, struct file *filp)
     if (dev_open_count == 0) // first open, enable interrupts
     {
         // request IRQ lines
-        err = request_irq(GPIO_EVEN_IRQ_NUM, &gpio_handler, 0, DEVICE_NAME, NULL);
+        err = request_irq(gpio_irq_even, &gpio_handler, 0, DEVICE_NAME, NULL);
         if (err < 0)
             return err;
-        err = request_irq(GPIO_ODD_IRQ_NUM, &gpio_handler, 0, DEVICE_NAME, NULL);
+        err = request_irq(gpio_irq_odd, &gpio_handler, 0, DEVICE_NAME, NULL);
         if (err < 0)
             return err;
 
