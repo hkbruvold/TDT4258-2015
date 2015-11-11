@@ -27,7 +27,7 @@ static void *gpio_irq;
 static unsigned int dev_open_count = 0;
 
 // cached GPIO pin data
-static char button_data;
+static char button_data = 'a';
 
 // function declarations
 static int gamepad_open(struct inode *inode, struct file *filp);
@@ -85,8 +85,8 @@ static int __init gpio_init(void)
     iowrite32(0x22222222, gpio_irq + GPIO_EXTIPSELL);
 
     // set interrupts to fire on rising and falling edge for pins 0-7
-    iowrite32(0xf, gpio_irq + GPIO_EXTIRISE);
-    iowrite32(0xf, gpio_irq + GPIO_EXTIFALL);
+    iowrite32(0xff, gpio_irq + GPIO_EXTIRISE);
+    iowrite32(0xff, gpio_irq + GPIO_EXTIFALL);
 
     return 0;
 }
@@ -121,7 +121,7 @@ static int gamepad_open(struct inode *inode, struct file *filp)
         }
 
         // enable GPIO interrupts for pin 0-7
-        iowrite32(0xf, gpio_irq + GPIO_IEN);
+        iowrite32(0xff, gpio_irq + GPIO_IEN);
 
         printk("Interrupts enabled\n");
     }
@@ -148,18 +148,14 @@ static int gamepad_release(struct inode *inode, struct file *filp)
     return 0;
 }
 
-/*
- * Note: The functions we introduce in this section and in "Using the ioctl
- * Argument" in Chapter 5, "Enhanced Char Driver Operations" use some hidden
- * magic to deal with page faults in the proper way even when the CPU is
- * executing in kernel space.
- */
-
 static ssize_t gamepad_read(struct file *filp, char __user *buff,
                             size_t count, loff_t *offp)
 {
     if (count == 0)
+    {
+        printk("Gamepad writing 0 bytes\n");
         return 0;
+    }
 
     // write a single byte, the GPIO button data
     copy_to_user(buff, &button_data, 1);
