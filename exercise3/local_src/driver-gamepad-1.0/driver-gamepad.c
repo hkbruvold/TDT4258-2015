@@ -58,7 +58,6 @@ static irqreturn_t gpio_handler(int irq, void *dev_id)
     button_data = ioread8(gpio_pc + GPIO_DIN);
 
     // clear the interrupt: write value of GPIO_IF to GPIO_IFC
-
     gpio_if = ioread32(gpio_irq + GPIO_IF);
     iowrite32(gpio_if, gpio_irq + GPIO_IFC);
 
