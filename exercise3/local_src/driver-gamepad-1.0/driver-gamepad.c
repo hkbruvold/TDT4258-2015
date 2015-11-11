@@ -31,7 +31,7 @@ static unsigned int dev_open_count = 0;
 static char button_data = 0;
 
 // async queues for fasync and signals
-struct fasync_struct *async_queue = NULL;
+static struct fasync_struct *async_queue = NULL;
 
 // function declarations
 static int gamepad_open(struct inode *inode, struct file *filp);
