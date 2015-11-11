@@ -127,6 +127,13 @@ static int gamepad_probe(struct platform_device *platform_device)
 
 static int gamepad_remove(struct platform_device *dev)
 {
+    // unregister, delete and destroy everything
+    gpio_exit();
+    unregister_chrdev_region(device_number, NUM_MINOR);
+    cdev_del(&char_device);
+    device_destroy(cl, device_number);
+    class_destroy(cl);
+
     return 0;
 }
 
@@ -219,8 +226,8 @@ static int gamepad_release(struct inode *inode, struct file *filp)
     {
         iowrite32(0x0, gpio_irq + GPIO_IEN);
 
-        free_irq(GPIO_EVEN_IRQ_NUM, NULL);
-        free_irq(GPIO_ODD_IRQ_NUM, NULL);
+        free_irq(gpio_irq_even, NULL);
+        free_irq(gpio_irq_odd, NULL);
     }
 
     // remove this file from the asynchronously notified files
@@ -256,12 +263,6 @@ static int __init gamepad_init(void)
 
 static void __exit gamepad_exit(void)
 {
-    // unregister, delete and destroy everything
-    gpio_exit();
-    unregister_chrdev_region(device_number, NUM_MINOR);
-    cdev_del(&char_device);
-    device_destroy(cl, device_number);
-    class_destroy(cl);
 }
 
 module_init(gamepad_init);

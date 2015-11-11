@@ -30,8 +30,5 @@
 #define GPIO_IFS         0x18
 #define GPIO_IFC         0x1c
 
-#define GPIO_EVEN_IRQ_NUM  17
-#define GPIO_ODD_IRQ_NUM   18
-
 #endif // EFM32GG_h
 
