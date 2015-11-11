@@ -9,8 +9,8 @@
 
 #include "framebuffer.h"
 
-int fd;
-uint16_t *screen;
+static int fd;
+static uint16_t *screen;
 struct fb_copyarea rect;
 
 void setupFB()
