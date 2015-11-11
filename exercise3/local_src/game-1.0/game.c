@@ -81,6 +81,7 @@ void tick()
 	    // when a collision is detected
 	    running = 0;
 	    printf("Collision detected, stopping\n");
+	    exit(EXIT_SUCCESS);
 	}
     }
 }
@@ -109,7 +110,7 @@ int updatePlayers()
     setRect((int) player1.x, (int) player1.y, SNAKE_WIDTH, SNAKE_WIDTH);
     setRect((int) player2.x, (int) player2.y, SNAKE_WIDTH, SNAKE_WIDTH);
 
-    if (p1collide || p2collide) {
+    if (p1collide == 0 || p2collide == 0) {
 	return 1;
     }
     return 0;
