@@ -12,7 +12,7 @@
 // TICKTIME is time in nanoseconds between each tick
 #define TICKTIME 100000000
 // SPEED is pixels per tick
-#define SPEED 1 
+#define SPEED 4 
 // SNAKE_WIDTH is diameter of snake
 #define SNAKE_WIDTH 4
 
@@ -24,6 +24,7 @@ struct snake {
 
 void tick();
 int updatePlayers();
+void turnPlayer(struct snake *player, int d);
 
 struct snake player1;
 struct snake player2;
@@ -48,11 +49,11 @@ void gameloop()
     // initialise player positions
     player1.x = 80;
     player1.y = 120;
-    player1.direction = 15;
+    player1.direction = 0;
     
     player2.x = 240;
     player2.y = 120;
-    player2.direction = 0;
+    player2.direction = 15;
 
     // set value to keep game running
     running = 1;
@@ -77,6 +78,8 @@ void tick()
     if (running) {
 	if (updatePlayers()) {
 	    // when a collision is not deteted
+	    turnPlayer(&player1, 1);
+	    turnPlayer(&player2, -1);
 	} else {
 	    // when a collision is detected
 	    running = 0;
@@ -118,6 +121,16 @@ int updatePlayers()
 	return 1;
     }
     return 0;
+}
+
+void turnPlayer(struct snake *player, int d)
+{
+    player->direction += d;
+    if (player->direction < 0) {
+	player->direction += 30;
+    } else if (player->direction > 29) {
+	player->direction -= 30;
+    }
 }
 
 // return timespec struct with difference between start and stop
