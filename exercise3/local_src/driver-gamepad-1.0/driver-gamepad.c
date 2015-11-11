@@ -42,7 +42,7 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
                             size_t count, loff_t *offp);
 
 // setup and breakdown functions
-static int __init gpio_init(void);
+static int __init gpio_init(resource_size_t start_address);
 static void __exit gpio_exit(void);
 static int __init gamepad_init(void);
 static void __exit gamepad_exit(void);
@@ -78,16 +78,42 @@ static struct platform_driver gamepad_driver = {
     }
 };
 
-static int gamepad_probe(struct platform_device *dev)
+static int gamepad_probe(struct platform_device *platform_device)
 {
-    // TODO: 0 should be a named constant
-    struct resource *res = platform_get_resource(dev, IORESOURCE_MEM, 0);
+    int err;
+    struct device *dev;
 
-    int irq_even = platform_get_irq(dev, 0);
-    int irq_odd = platform_get_irq(dev, 1);
+    struct resource *resource =
+        platform_get_resource(platform_device, IORESOURCE_MEM, 0);
 
-    printk("GPIO start: %#llx end: %#llx\n", res->start, res->end);
-    printk("GPIO IRQ even: %d odd: %d\n", irq_even, irq_odd);
+    int irq_even = platform_get_irq(platform_device, 0);
+    int irq_odd = platform_get_irq(platform_device, 1);
+
+    printk(KERN_DEBUG "GPIO start: %#llx end: %#llx\n", resource->start, resource->end);
+    printk(KERN_DEBUG "GPIO IRQ even: %d odd: %d\n", irq_even, irq_odd);
+
+    // allocate character device with dynamic major number and one minor number
+    err = alloc_chrdev_region(&device_number, 0, NUM_MINOR, DEVICE_NAME);
+    if (err < 0)
+        return err;
+
+    // init cdev
+    cdev_init(&char_device, &fops);
+
+    err = cdev_add(&char_device, device_number, NUM_MINOR);
+    if (err < 0)
+        return err;
+
+    // create device file
+    cl = class_create(THIS_MODULE, DEVICE_NAME);
+    dev = device_create(cl, NULL, device_number, NULL, DEVICE_NAME);
+    if (IS_ERR(dev))
+        return PTR_ERR(dev);
+
+    // initialize GPIO
+    err = gpio_init(resource->start);
+    if (err < 0)
+        return err;
 
     return 0;
 }
@@ -116,7 +142,7 @@ static irqreturn_t gpio_handler(int irq, void *dev_id)
     return IRQ_HANDLED;
 }
 
-static int __init gpio_init(void)
+static int __init gpio_init(resource_size_t start_address)
 {
     // request exclusive access to the GPIO port C memory region
     if (request_mem_region(GPIO_PC_BASE, GPIO_PC_LENGTH, DEVICE_NAME) == NULL)
@@ -215,33 +241,8 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
 
 static int __init gamepad_init(void)
 {
-    int err;
-    struct device *dev;
 
-    // allocate character device with dynamic major number and one minor number
-    err = alloc_chrdev_region(&device_number, 0, NUM_MINOR, DEVICE_NAME);
-    if (err < 0)
-        return err;
-
-    // init cdev
-    cdev_init(&char_device, &fops);
-
-    err = cdev_add(&char_device, device_number, NUM_MINOR);
-    if (err < 0)
-        return err;
-
-    // create device file
-    cl = class_create(THIS_MODULE, DEVICE_NAME);
-    dev = device_create(cl, NULL, device_number, NULL, DEVICE_NAME);
-    if (IS_ERR(dev))
-        return PTR_ERR(dev);
-
-    // initialize GPIO
-    err = gpio_init();
-    if (err < 0)
-        return err;
-
-    platform_driver_register(&gamepad_driver);
+    return platform_driver_register(&gamepad_driver);
 
     return 0;
 }
