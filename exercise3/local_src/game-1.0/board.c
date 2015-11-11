@@ -6,7 +6,7 @@
 char boardarray[76800]; // 320*240
 
 // check for collision in given rectangle
-int checkRect(int x, int y, int width, int height)
+int checkRect(int x, int y, int width, int height, int oldx, int oldy)
 {
     char *pos;
     printf("Checking from pos (%i, %i)\n", x, y);
@@ -15,11 +15,15 @@ int checkRect(int x, int y, int width, int height)
     for (y0 = y; y0 <= y+height; y0++) {
 	pos = &boardarray[320*y0+x];
 	for (dx = 0; dx <= width; dx++) {
-	    if (*pos++ == 1) { // check for collision
+	    // check if not in same rectangle as previously
+	    if (!(y0 >= oldy && y0 <= (oldy + height) && 
+		  (x + dx) >= oldx && (x + dx) <= (oldx + width))) {
 		printf("(%i, %i): %i\n", x+dx, y0, *pos);
-		return 1;
+		if (*pos == 1) { // check for collision
+		    return 1;
+		}
 	    }
-	    printf("(%i, %i): %i\n", x+dx, y0, *pos);
+	    *pos++;
 	}
     }
     return 0;

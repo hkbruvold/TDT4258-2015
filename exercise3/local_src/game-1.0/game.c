@@ -91,6 +91,10 @@ int updatePlayers()
 {
     uint16_t blue = COLOR(0b00000, 0b000000, 0b11111);
     uint16_t red = COLOR(0b11111, 0b000000, 0b00000);
+    int old1x = (int) player1.x;
+    int old1y = (int) player1.y;
+    int old2x = (int) player2.x;
+    int old2y = (int) player2.y;
 
     // calculate new position
     player1.x += SPEED*coslist[player1.direction];
@@ -103,8 +107,8 @@ int updatePlayers()
     drawRect((int) player2.x, (int) player2.y, SNAKE_WIDTH, SNAKE_WIDTH, &blue);
     
     // check for collision
-    p1collide = checkRect((int) player1.x, (int) player1.y, SNAKE_WIDTH, SNAKE_WIDTH);
-    p2collide = checkRect((int) player2.x, (int) player2.y, SNAKE_WIDTH, SNAKE_WIDTH);
+    p1collide = checkRect((int) player1.x, (int) player1.y, SNAKE_WIDTH, SNAKE_WIDTH, old1x, old1y);
+    p2collide = checkRect((int) player2.x, (int) player2.y, SNAKE_WIDTH, SNAKE_WIDTH, old2x, old2y);
 
     // add position to board array
     setRect((int) player1.x, (int) player1.y, SNAKE_WIDTH, SNAKE_WIDTH);
