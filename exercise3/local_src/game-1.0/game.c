@@ -11,9 +11,9 @@
 #define PI 3.14159265
 
 // TICKTIME is time in nanoseconds between each tick
-#define TICKTIME 50000000
+#define TICKTIME 100000000
 // SPEED is pixels per tick
-#define SPEED 4 
+#define SPEED 2
 // SNAKE_WIDTH is diameter of snake
 #define SNAKE_WIDTH 4
 
@@ -26,6 +26,10 @@ struct snake {
 void tick();
 int updatePlayers();
 void turnPlayer(struct snake *player, int d);
+void updateDirections();
+void gameloop();
+void getTimespecDiff(struct timespec *diffTime, struct timespec *start, struct timespec *stop);
+void timespecSince(struct timespec *tSince, struct timespec *prev);
 
 struct snake player1;
 struct snake player2;
@@ -51,11 +55,11 @@ void gameloop()
     // initialise player positions
     player1.x = 80;
     player1.y = 120;
-    player1.direction = 0;
+    player1.direction = 7;
     
     player2.x = 240;
     player2.y = 120;
-    player2.direction = 15;
+    player2.direction = 7;
 
     // set value to keep game running
     running = 1;
@@ -80,9 +84,7 @@ void tick()
     if (running) {
 	if (updatePlayers()) {
 	    // when a collision is not deteted
-	    printf("%i\n", readGamepad());
-	    turnPlayer(&player1, 1);
-	    turnPlayer(&player2, -1);
+	    updateDirections();
 	} else {
 	    // when a collision is detected
 	    running = 0;
@@ -124,6 +126,25 @@ int updatePlayers()
 	return 1;
     }
     return 0;
+}
+
+// function to update player directions
+void updateDirections()
+{
+    char data = readGamepad();
+    
+    if (!(data & 0b1)) { // SW1
+        turnPlayer(&player1, 1);
+    }
+    if (!(data & 0b100)) { //SW3
+        turnPlayer(&player1, -1);
+    }
+    if (!(data & 0b10000)) { //SW5
+	turnPlayer(&player2, 1);
+    }
+    if (!(data & 0b1000000)) { //SW7
+	turnPlayer(&player2, -1);
+    }
 }
 
 // function to turn player, every d is 12 degree
