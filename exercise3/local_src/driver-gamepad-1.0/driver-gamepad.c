@@ -6,13 +6,14 @@
 #include <linux/device.h>
 #include <linux/ioport.h>
 #include <linux/interrupt.h>
+#include <linux/signal.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
 
 #include "efm32gg.h"
 
-#define NUM_MINOR (1)
-#define DEVICE_NAME ("gamepad")
+#define NUM_MINOR 1
+#define DEVICE_NAME "gamepad"
 
 // device structs
 static dev_t device_number;
@@ -27,11 +28,15 @@ static void *gpio_irq;
 static unsigned int dev_open_count = 0;
 
 // cached GPIO pin data
-static char button_data;
+static char button_data = 0;
+
+// async queues for fasync and signals
+struct fasync_struct *async_queue = NULL;
 
 // function declarations
 static int gamepad_open(struct inode *inode, struct file *filp);
 static int gamepad_release(struct inode *inode, struct file *filp);
+static int gamepad_fasync(int fd, struct file *filp, int mode);
 static ssize_t gamepad_read(struct file *filp, char __user *buff,
                             size_t count, loff_t *offp);
 static int __init gpio_init(void);
@@ -60,6 +65,10 @@ static irqreturn_t gpio_handler(int irq, void *dev_id)
     // clear the interrupt: write value of GPIO_IF to GPIO_IFC
     gpio_if = ioread32(gpio_irq + GPIO_IF);
     iowrite32(gpio_if, gpio_irq + GPIO_IFC);
+
+    // signal any waiting processes
+    if (async_queue)
+        kill_fasync(&async_queue, SIGIO, POLL_IN);
 
     return IRQ_HANDLED;
 }
@@ -112,21 +121,13 @@ static int gamepad_open(struct inode *inode, struct file *filp)
         // request IRQ lines
         err = request_irq(GPIO_EVEN_IRQ_NUM, &gpio_handler, 0, DEVICE_NAME, NULL);
         if (err < 0)
-        {
-            printk("error %d\n", err);
             return err;
-        }
         err = request_irq(GPIO_ODD_IRQ_NUM, &gpio_handler, 0, DEVICE_NAME, NULL);
         if (err < 0)
-        {
-            printk("error %d\n", err);
             return err;
-        }
 
         // enable GPIO interrupts for pin 0-7
         iowrite32(0xff, gpio_irq + GPIO_IEN);
-
-        printk("Interrupts enabled\n");
     }
 
     ++dev_open_count;
@@ -144,21 +145,24 @@ static int gamepad_release(struct inode *inode, struct file *filp)
 
         free_irq(GPIO_EVEN_IRQ_NUM, NULL);
         free_irq(GPIO_ODD_IRQ_NUM, NULL);
-
-        printk("Interrupts disabled\n");
     }
 
+    // remove this file from the asynchronously notified files
+    gamepad_fasync(-1, filp, 0);
+
     return 0;
+}
+
+static int gamepad_fasync(int fd, struct file *filp, int mode)
+{
+    return fasync_helper(fd, filp, mode, &async_queue);
 }
 
 static ssize_t gamepad_read(struct file *filp, char __user *buff,
                             size_t count, loff_t *offp)
 {
     if (count == 0)
-    {
-        printk("Gamepad writing 0 bytes\n");
         return 0;
-    }
 
     // write a single byte, the GPIO button data
     copy_to_user(buff, &button_data, 1);
@@ -194,8 +198,6 @@ static int __init gamepad_init(void)
     if (err < 0)
         return err;
 
-    printk("Gamepad init success\n");
-
     return 0;
 }
 
@@ -207,8 +209,6 @@ static void __exit gamepad_exit(void)
     cdev_del(&char_device);
     device_destroy(cl, device_number);
     class_destroy(cl);
-
-    printk("Short life for a small module...\n");
 }
 
 module_init(gamepad_init);
