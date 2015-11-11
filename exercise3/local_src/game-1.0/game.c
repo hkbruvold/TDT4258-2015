@@ -63,7 +63,7 @@ void gameloop()
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastTime);
     while (1) {
 	// sleep until next tick
-	sleepTime = timespecSince(lastTime);
+	timespecSince(&sleepTime, &lastTime);
 	sleepTime.tv_nsec = TICKTIME - sleepTime.tv_nsec; // assume tick time is less than one sec
 	nanosleep(&sleepTime, NULL);
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastTime);
@@ -134,23 +134,21 @@ void turnPlayer(struct snake *player, int d)
 }
 
 // return timespec struct with difference between start and stop
-struct timespec getTimespecDiff(struct timespec start, struct timespec stop)
+void getTimespecDiff(struct timespec *diffTime, struct timespec *start, struct timespec *stop)
 {
-    struct timespec diffTime;
-    diffTime.tv_sec = stop.tv_sec - start.tv_sec;
-    if (stop.tv_nsec < start.tv_nsec) {
-	diffTime.tv_nsec = stop.tv_nsec + 1E9 - start.tv_nsec;
-	diffTime.tv_sec--;
+    diffTime->tv_sec = stop->tv_sec - start->tv_sec;
+    if (stop->tv_nsec < start->tv_nsec) {
+	diffTime->tv_nsec = stop->tv_nsec + 1E9 - start->tv_nsec;
+	diffTime->tv_sec--;
     } else {
-	diffTime.tv_nsec = stop.tv_nsec - start.tv_nsec;
+	diffTime->tv_nsec = stop->tv_nsec - start->tv_nsec;
     }
-    return diffTime;
 }
 
 // return elapsed time in timespec struct since prev
-struct timespec timespecSince(struct timespec prev)
+void timespecSince(struct timespec *tSince, struct timespec *prev)
 {
     struct timespec now;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
-    return getTimespecDiff(prev, now);
+    getTimespecDiff(tSince, prev, &now);
 }

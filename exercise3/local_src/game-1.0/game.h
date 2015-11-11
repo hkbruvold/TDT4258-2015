@@ -6,7 +6,7 @@ static double sinlist[] = {0.0, 0.207911690818, 0.406736643076, 0.587785252292, 
 static double coslist[] = {1.0, 0.978147600734, 0.913545457643, 0.809016994375, 0.669130606359, 0.5, 0.309016994375, 0.104528463268, -0.104528463268, -0.309016994375, -0.5, -0.669130606359, -0.809016994375, -0.913545457643, -0.978147600734, -1.0, -0.978147600734, -0.913545457643, -0.809016994375, -0.669130606359, -0.5, -0.309016994375, -0.104528463268, 0.104528463268, 0.309016994375, 0.5, 0.669130606359, 0.809016994375, 0.913545457643, 0.978147600734};
 
 void gameloop();
-struct timespec getTimespecDiff(struct timespec start, struct timespec stop);
-struct timespec timespecSince(struct timespec prev);
+void getTimespecDiff(struct timespec *diffTime, struct timespec *start, struct timespec *stop);
+void timespecSince(struct timespec *tSince, struct timespec *prev);
 
 #endif
