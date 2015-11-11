@@ -10,7 +10,7 @@
 #define PI 3.14159265
 
 // TICKTIME is time in nanoseconds between each tick
-#define TICKTIME 100000000
+#define TICKTIME 50000000
 // SPEED is pixels per tick
 #define SPEED 4 
 // SNAKE_WIDTH is diameter of snake
@@ -123,6 +123,7 @@ int updatePlayers()
     return 0;
 }
 
+// function to turn player, every d is 12 degree
 void turnPlayer(struct snake *player, int d)
 {
     player->direction += d;
@@ -131,7 +132,7 @@ void turnPlayer(struct snake *player, int d)
     } else if (player->direction > 29) {
 	player->direction -= 30;
     }
-}
+}    
 
 // return timespec struct with difference between start and stop
 void getTimespecDiff(struct timespec *diffTime, struct timespec *start, struct timespec *stop)
