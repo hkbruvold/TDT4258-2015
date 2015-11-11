@@ -27,7 +27,7 @@ static void *gpio_irq;
 static unsigned int dev_open_count = 0;
 
 // cached GPIO pin data
-static char button_data = 'a';
+static char button_data;
 
 // function declarations
 static int gamepad_open(struct inode *inode, struct file *filp);
