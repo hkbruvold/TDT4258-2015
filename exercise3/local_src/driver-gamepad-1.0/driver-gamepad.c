@@ -7,6 +7,7 @@
 #include <linux/ioport.h>
 #include <linux/interrupt.h>
 #include <linux/signal.h>
+#include <linux/platform_device.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
 
@@ -33,17 +34,24 @@ static char button_data = 0;
 // async queues for fasync and signals
 static struct fasync_struct *async_queue = NULL;
 
-// function declarations
+// device functions
 static int gamepad_open(struct inode *inode, struct file *filp);
 static int gamepad_release(struct inode *inode, struct file *filp);
 static int gamepad_fasync(int fd, struct file *filp, int mode);
 static ssize_t gamepad_read(struct file *filp, char __user *buff,
                             size_t count, loff_t *offp);
+
+// setup and breakdown functions
 static int __init gpio_init(void);
 static void __exit gpio_exit(void);
 static int __init gamepad_init(void);
 static void __exit gamepad_exit(void);
 
+// platform device functions
+static int gamepad_probe(struct platform_device *dev);
+static int gamepad_remove(struct platform_device *dev);
+
+// interrupt handler
 static irqreturn_t gpio_handler(int irq, void *dev_id);
 
 // file operations for the device
@@ -54,6 +62,40 @@ static struct file_operations fops = {
     .fasync = &gamepad_fasync,
     .read = &gamepad_read
 };
+
+static struct of_device_id gamepad_of_match[] = {
+    { .compatible = "tdt4258" },
+    {}
+};
+
+static struct platform_driver gamepad_driver = {
+    .probe = gamepad_probe,
+    .remove = gamepad_remove,
+    .driver = {
+        .name = DEVICE_NAME,
+        .owner = THIS_MODULE,
+        .of_match_table = gamepad_of_match
+    }
+};
+
+static int gamepad_probe(struct platform_device *dev)
+{
+    // TODO: 0 should be a named constant
+    struct resource *res = platform_get_resource(dev, IORESOURCE_MEM, 0);
+
+    int irq_even = platform_get_irq(dev, 0);
+    int irq_odd = platform_get_irq(dev, 1);
+
+    printk("GPIO start: %#llx end: %#llx\n", res->start, res->end);
+    printk("GPIO IRQ even: %d odd: %d\n", irq_even, irq_odd);
+
+    return 0;
+}
+
+static int gamepad_remove(struct platform_device *dev)
+{
+    return 0;
+}
 
 // GPIO interrupt handler
 static irqreturn_t gpio_handler(int irq, void *dev_id)
@@ -199,6 +241,8 @@ static int __init gamepad_init(void)
     if (err < 0)
         return err;
 
+    platform_driver_register(&gamepad_driver);
+
     return 0;
 }
 
@@ -216,4 +260,5 @@ module_init(gamepad_init);
 module_exit(gamepad_exit);
 MODULE_DESCRIPTION("TDT4258 Gamepad driver");
 MODULE_LICENSE("GPL");
+MODULE_DEVICE_TABLE(of, gamepad_of_match);
 
