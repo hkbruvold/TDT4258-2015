@@ -6,16 +6,16 @@
 
 #include "gamepad.h"
 
-int fd;
+int gfd;
 
 void setupGamepad()
 {
-    fd = open("/dev/gamepad", O_RDWR);
+    gfd = open("/dev/gamepad", O_RDWR);
 }
 
 char readGamepad()
 {
     char data;
-    read(fd, &data, 1);
+    read(gfd, &data, 1);
     return data;
 }
