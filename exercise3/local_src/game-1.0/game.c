@@ -58,13 +58,13 @@ void gameloop()
     running = 1;
     
     struct timespec lastTime;
-    struct timespec newTime;
+    struct timespec sleepTime;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastTime);
     while (1) {
-	while (msSince(lastTime)<100); // TODO: replace with sleep
-	/*newTime = timespecSince(lastTime);
-	newTime.tv_nsec = TICKTIME - newTime.tv_nsec;
-	nanosleep(&newTime, NULL);*/
+	// sleep until next tick
+	sleepTime = timespecSince(lastTime);
+	sleepTime.tv_nsec = TICKTIME - sleepTime.tv_nsec; // assume tick time is less than one sec
+	nanosleep(&sleepTime, NULL);
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastTime);
 	
 	tick();
@@ -118,24 +118,6 @@ int updatePlayers()
 	return 1;
     }
     return 0;
-}	
-
-// return difference in milliseconds from start to stop
-long getmsDiff(struct timespec start, struct timespec stop) // TODO: remove when/if sleep works
-{
-    long diff;
-    diff = ((long) stop.tv_sec*1000 + stop.tv_nsec/1E6) 
- 	 - ((long) start.tv_sec*1000 + start.tv_nsec/1E6);
-    
-    return diff;
-}
-
-// return elapsed time in millisecond since prev
-long msSince(struct timespec prev) // TODO: remove when/if sleep works
-{
-    struct timespec now;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
-    return getmsDiff(prev, now);
 }
 
 // return timespec struct with difference between start and stop
