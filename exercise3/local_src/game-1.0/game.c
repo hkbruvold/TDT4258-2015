@@ -13,7 +13,7 @@
 // TICKTIME is time in nanoseconds between each tick
 #define TICKTIME 100000000
 // SPEED is pixels per tick
-#define SPEED 2
+#define SPEED 4
 // SNAKE_WIDTH is diameter of snake
 #define SNAKE_WIDTH 4
 
@@ -82,7 +82,7 @@ void gameloop()
 void tick()
 {
     if (running) {
-	if (updatePlayers()) {
+	if (updatePlayers() == 0) {
 	    // when a collision is not deteted
 	    updateDirections();
 	} else {
@@ -122,7 +122,12 @@ int updatePlayers()
     setRect((int) player1.x, (int) player1.y, SNAKE_WIDTH, SNAKE_WIDTH);
     setRect((int) player2.x, (int) player2.y, SNAKE_WIDTH, SNAKE_WIDTH);
 
-    if (p1collide == 0 || p2collide == 0) {
+    if (p1collide == 1) {
+	printf("Red player collided\n");
+	return 1;
+    }
+    if (p2collide == 1) {
+	printf("Blue player collided\n");
 	return 1;
     }
     return 0;
