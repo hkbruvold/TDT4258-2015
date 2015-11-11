@@ -52,11 +52,15 @@ static struct file_operations fops = {
 // GPIO interrupt handler
 static irqreturn_t gpio_handler(int irq, void *dev_id)
 {
+    int gpio_if;
+
     // cache button data
     button_data = ioread8(gpio_pc + GPIO_DIN);
 
     // clear the interrupt: write value of GPIO_IF to GPIO_IFC
-    iowrite32(ioread32(gpio_pc + GPIO_IF), gpio_pc + GPIO_IFC);
+
+    gpio_if = ioread32(gpio_irq + GPIO_IF);
+    iowrite32(gpio_if, gpio_irq + GPIO_IFC);
 
     return IRQ_HANDLED;
 }
@@ -104,7 +108,7 @@ static int gamepad_open(struct inode *inode, struct file *filp)
 {
     int err;
 
-    if (0 && dev_open_count == 0) // first open, enable interrupts
+    if (dev_open_count == 0) // first open, enable interrupts
     {
         // request IRQ lines
         err = request_irq(GPIO_EVEN_IRQ_NUM, &gpio_handler, 0, DEVICE_NAME, NULL);
@@ -135,7 +139,7 @@ static int gamepad_release(struct inode *inode, struct file *filp)
 {
     --dev_open_count;
 
-    if (0 && dev_open_count == 0) // disable interrupts on final release
+    if (dev_open_count == 0) // disable interrupts on final release
     {
         iowrite32(0x0, gpio_irq + GPIO_IEN);
 
