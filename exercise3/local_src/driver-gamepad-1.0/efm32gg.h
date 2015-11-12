@@ -5,9 +5,9 @@
 
 // platform device GPIO start address: 0x400061FF
 
-#define GPIO_MEM_INDEX 0
-#define GPIO_EVEN_IRQ_INDEX 0
-#define GPIO_ODD_IRQ_INDEX 1
+#define GPIO_MEM_INDEX       0
+#define GPIO_EVEN_IRQ_INDEX  0
+#define GPIO_ODD_IRQ_INDEX   1
 
 // #define GPIO_PC_BASE     0x40006048
 #define GPIO_PC_LENGTH   (GPIO_PINLOCKN + 4)
