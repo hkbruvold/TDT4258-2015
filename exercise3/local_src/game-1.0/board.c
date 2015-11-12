@@ -42,4 +42,14 @@ void setRect(int x, int y, int width, int height)
 void clearBoard()
 {
     memset(&boardarray, 0, sizeof(boardarray));
+    
+    // add border around screen
+    memset(&boardarray, 1, 320); // top edge
+    memset(&boardarray[320*239], 1, 320); // bottom edge
+    
+    int y;
+    for (y = 1; y <= 239; y++) {
+	memset(&boardarray[320*y], 1, 1); // left edge
+	memset(&boardarray[320*y+319], 1, 1); // right edge
+    }
 }
