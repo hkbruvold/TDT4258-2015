@@ -12,7 +12,7 @@
 static int fd;
 static char data;
 
-void setupGamepad()
+void setupGamepad(void)
 {
     struct sigaction action;
     
@@ -30,13 +30,12 @@ void setupGamepad()
 
 void readDriver(int signo)
 {
-    printf("signal handler running\n");
     if (signo == SIGIO) {
 	read(fd, &data, 1);
     }
 }
 
-char readGamepad()
+char readGamepad(void)
 {
     return data;
 }

@@ -3,5 +3,6 @@
 
 int checkRect(int x, int y, int width, int height, int oldx, int oldy);
 void setRect(int x, int y, int width, int height);
+void clearBoard(void);
 
 #endif

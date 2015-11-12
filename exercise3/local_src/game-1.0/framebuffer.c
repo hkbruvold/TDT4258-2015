@@ -13,7 +13,7 @@ static int fd;
 static uint16_t *screen;
 struct fb_copyarea rect;
 
-void setupFB()
+void setupFB(void)
 {
   fd = open("/dev/fb0", O_RDWR);
   
@@ -30,7 +30,7 @@ void updateRect(int dx, int dy, int width, int height)
   ioctl(fd, 0x4680, &rect);
 }
 
-void clearScreen()
+void clearScreen(void)
 {
   memset(screen, 0x00, 320*240*2);
   updateRect(0, 0, 320, 240);

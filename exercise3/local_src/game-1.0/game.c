@@ -24,33 +24,38 @@ struct snake {
 };
 
 void tick();
-int updatePlayers();
+int updatePlayers(void);
 void turnPlayer(struct snake *player, int d);
-void updateDirections();
-void gameloop();
+void updateDirections(void);
+void checkForRestart(void);
+void initGame(void);
+void gameloop(void);
 void getTimespecDiff(struct timespec *diffTime, struct timespec *start, struct timespec *stop);
 void timespecSince(struct timespec *tSince, struct timespec *prev);
 
 struct snake player1;
 struct snake player2;
 int running; // boolean if game is running
+int exitgame; // boolean if game should exit
 int p1collide; // boolean if player 1 collides
 int p2collide; // boolean if player 2 collides
 
 int main(int argc, char *argv[])
 {
-    printf("Hello World, I'm game!\n");
-	
+    printf("Welcome!\nSW1 and SW3 controls red player\nSW5 and SW7 controls blue player\n");
+    
+    // setup framebuffer and gamepad
     setupFB();
     setupGamepad();
     
+    // initialise game and run gameloop
+    initGame();
     gameloop();
-	
-    exit(EXIT_SUCCESS);
+
+    return 0;
 }
 
-
-void gameloop()
+void initGame(void)
 {
     // initialise player positions
     player1.x = 80;
@@ -63,10 +68,20 @@ void gameloop()
 
     // set value to keep game running
     running = 1;
+    exitgame = 0;
     
+    // clear board for fresh start
+    clearBoard();
+}
+
+void gameloop(void)
+{    
+    // setup for keeping track of time
     struct timespec lastTime;
     struct timespec sleepTime;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastTime);
+
+    // mainloop
     while (1) {
 	// sleep until next tick
 	timespecSince(&sleepTime, &lastTime);
@@ -74,12 +89,13 @@ void gameloop()
 	nanosleep(&sleepTime, NULL);
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastTime);
 	
+	// execute tick function
 	tick();
     }
 }
 
 // each tick moves the players and check for collisions
-void tick()
+void tick(void)
 {
     if (running) {
 	if (updatePlayers() == 0) {
@@ -88,17 +104,24 @@ void tick()
 	} else {
 	    // when a collision is detected
 	    running = 0;
-	    printf("Collision detected, stopping\n");
-	    exit(EXIT_SUCCESS);
+	    printf("Press SW2 to restart or SW4 to exit\n");
 	}
+    } else {
+	checkForRestart();
     }
+    if (exitgame) {
+	printf("Stopping game\n");
+	exit(EXIT_SUCCESS);
+    }	
 }
 
 // function to move players and update screen returns 1 if collision, and 0 if no collision
-int updatePlayers()
+int updatePlayers(void)
 {
     uint16_t blue = COLOR(0b00000, 0b000000, 0b11111);
     uint16_t red = COLOR(0b11111, 0b000000, 0b00000);
+    
+    // variables used to prevent collision detection on old position
     int old1x = (int) player1.x;
     int old1y = (int) player1.y;
     int old2x = (int) player2.x;
@@ -123,18 +146,18 @@ int updatePlayers()
     setRect((int) player2.x, (int) player2.y, SNAKE_WIDTH, SNAKE_WIDTH);
 
     if (p1collide == 1) {
-	printf("Red player collided\n");
+	printf("Game over!\nBlue player won, red player collided\n");
 	return 1;
     }
     if (p2collide == 1) {
-	printf("Blue player collided\n");
+	printf("Game over!\nRed player won, blue player collided\n");
 	return 1;
     }
     return 0;
 }
 
-// function to update player directions
-void updateDirections()
+// function to read gamepad and update player directions
+void updateDirections(void)
 {
     char data = readGamepad();
     
@@ -152,6 +175,22 @@ void updateDirections()
     }
 }
 
+// check for restart or exit, will update boolean values
+void checkForRestart(void)
+{
+    char data = readGamepad();
+
+    if (!(data & 0b10)) { // SW2
+	printf("Restarting game");
+	running = 1;
+	initGame();
+	clearScreen();
+    }
+    if (!(data & 0b1000)) { //SW4
+	exitgame = 1;
+    }
+}
+
 // function to turn player, every d is 12 degree
 void turnPlayer(struct snake *player, int d)
 {
@@ -163,7 +202,7 @@ void turnPlayer(struct snake *player, int d)
     }
 }    
 
-// return timespec struct with difference between start and stop
+// diffTime will get time difference between start and stop
 void getTimespecDiff(struct timespec *diffTime, struct timespec *start, struct timespec *stop)
 {
     diffTime->tv_sec = stop->tv_sec - start->tv_sec;
@@ -175,7 +214,7 @@ void getTimespecDiff(struct timespec *diffTime, struct timespec *start, struct t
     }
 }
 
-// return elapsed time in timespec struct since prev
+// tSince will get time difference since prev
 void timespecSince(struct timespec *tSince, struct timespec *prev)
 {
     struct timespec now;
