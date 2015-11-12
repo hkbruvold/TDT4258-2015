@@ -46,10 +46,12 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
                             size_t count, loff_t *offp);
 
 // setup and breakdown functions
-static int __init gpio_init(resource_size_t start_address);
-static void __exit gpio_exit(void);
 static int __init gamepad_init(void);
 static void __exit gamepad_exit(void);
+
+// gpio
+static int gpio_init(resource_size_t start_address);
+static void gpio_exit(resource_size_t start_address);
 
 // platform device functions
 static int gamepad_probe(struct platform_device *dev);
@@ -122,7 +124,7 @@ static int gamepad_probe(struct platform_device *platform_device)
     return 0;
 }
 
-static int gamepad_remove(struct platform_device *dev)
+static int gamepad_remove(struct platform_device *platform_device)
 {
     struct resource *resource =
         platform_get_resource(platform_device, IORESOURCE_MEM, GPIO_MEM_INDEX);
@@ -159,15 +161,15 @@ static irqreturn_t gpio_handler(int irq, void *dev_id)
 static int gpio_init(resource_size_t start_address)
 {
     // random hardcoded offsets
-    resourse_size_t gpio_pc_address = start_address - 0x1B7;
-    resourse_size_t gpio_irq_address = start_address - 0xFF;
+    resource_size_t gpio_pc_address = start_address - 0x1B7;
+    resource_size_t gpio_irq_address = start_address - 0xFF;
 
     // request exclusive access to the GPIO port C memory region
-    if (request_mem_region(start_address, GPIO_PC_LENGTH, DEVICE_NAME) == NULL)
+    if (request_mem_region(gpio_pc_address, GPIO_PC_LENGTH, DEVICE_NAME) == NULL)
         return -EBUSY; // "device or resource busy"
 
     // map the GPIO port C ports to memory
-    gpio_pc = ioremap_nocache(start_address, GPIO_PC_LENGTH);
+    gpio_pc = ioremap_nocache(gpio_pc_address, GPIO_PC_LENGTH);
 
     // request and map GPIO IRQ region
     if (request_mem_region(gpio_irq_address, GPIO_IRQ_LENGTH, DEVICE_NAME) == NULL)
@@ -193,8 +195,8 @@ static int gpio_init(resource_size_t start_address)
 static void gpio_exit(resource_size_t start_address)
 {
     // random hardcoded offsets
-    resourse_size_t gpio_pc_address = start_address - 0x1B7;
-    resourse_size_t gpio_irq_address = start_address - 0xFF;
+    resource_size_t gpio_pc_address = start_address - 0x1B7;
+    resource_size_t gpio_irq_address = start_address - 0xFF;
 
     // unmap and release memory regions
     iounmap(gpio_pc);
