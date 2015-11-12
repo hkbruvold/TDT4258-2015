@@ -181,6 +181,7 @@ void checkForRestart()
     char data = readGamepad();
 
     if (!(data & 0b10)) { // SW2
+	printf("Restarting game");
 	running = 1;
 	initGame();
 	clearScreen();
