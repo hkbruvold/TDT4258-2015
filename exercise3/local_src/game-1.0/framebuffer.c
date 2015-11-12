@@ -8,6 +8,7 @@
 #include <string.h> // for memset
 
 #include "framebuffer.h"
+#include "bitmap.h"
 
 static int fd;
 static uint16_t *screen;
@@ -50,4 +51,22 @@ void drawRect(int x0, int y0, int width, int height, uint16_t *col)
     }
   }
   updateRect(x0, y0, width, height);
+}
+
+// draw a bitmap on screen in given color
+void drawBitmap(int centerx, int centery, bitmap_t *bitmap, uint16_t *col)
+{
+    int x0 = centerx - bitmap->width / 2;
+    int y0 = centery - bitmap->height / 2;
+    
+    int y;
+    int x;
+    for (y = 0; y <= bitmap->height; y++) {
+	for (x = 0; x <= bitmap->width; x++) {
+	    if (bitmap->array[bitmap->width * y + x] == 1) {
+		screen[320*(y0+y)+(x0+x)] = *col;
+	    }
+	}
+    }
+    updateRect(x0, y0, bitmap->width, bitmap->height);
 }
