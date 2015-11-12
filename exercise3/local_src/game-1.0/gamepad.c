@@ -12,7 +12,7 @@
 static int fd;
 static char data;
 
-void setupGamepad()
+void setupGamepad(void)
 {
     struct sigaction action;
     
@@ -35,7 +35,7 @@ void readDriver(int signo)
     }
 }
 
-char readGamepad()
+char readGamepad(void)
 {
     return data;
 }

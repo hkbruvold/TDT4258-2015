@@ -39,7 +39,7 @@ void setRect(int x, int y, int width, int height)
 }
 
 // clear boardarray
-void clearBoard()
+void clearBoard(void)
 {
     memset(&boardarray, 0, sizeof(boardarray));
     

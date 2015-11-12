@@ -1,8 +1,8 @@
 #ifndef GAMEPAD_H
 #define GAMEPAD_H
 
-void setupGamepad();
+void setupGamepad(void);
 void readDriver(int signo);
-char readGamepad();
+char readGamepad(void);
 
 #endif

@@ -24,12 +24,12 @@ struct snake {
 };
 
 void tick();
-int updatePlayers();
+int updatePlayers(void);
 void turnPlayer(struct snake *player, int d);
-void updateDirections();
-void checkForRestart();
-void initGame();
-void gameloop();
+void updateDirections(void);
+void checkForRestart(void);
+void initGame(void);
+void gameloop(void);
 void getTimespecDiff(struct timespec *diffTime, struct timespec *start, struct timespec *stop);
 void timespecSince(struct timespec *tSince, struct timespec *prev);
 
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void initGame()
+void initGame(void)
 {
     // initialise player positions
     player1.x = 80;
@@ -74,7 +74,7 @@ void initGame()
     clearBoard();
 }
 
-void gameloop()
+void gameloop(void)
 {    
     // setup for keeping track of time
     struct timespec lastTime;
@@ -95,7 +95,7 @@ void gameloop()
 }
 
 // each tick moves the players and check for collisions
-void tick()
+void tick(void)
 {
     if (running) {
 	if (updatePlayers() == 0) {
@@ -116,7 +116,7 @@ void tick()
 }
 
 // function to move players and update screen returns 1 if collision, and 0 if no collision
-int updatePlayers()
+int updatePlayers(void)
 {
     uint16_t blue = COLOR(0b00000, 0b000000, 0b11111);
     uint16_t red = COLOR(0b11111, 0b000000, 0b00000);
@@ -157,7 +157,7 @@ int updatePlayers()
 }
 
 // function to read gamepad and update player directions
-void updateDirections()
+void updateDirections(void)
 {
     char data = readGamepad();
     
@@ -176,7 +176,7 @@ void updateDirections()
 }
 
 // check for restart or exit, will update boolean values
-void checkForRestart()
+void checkForRestart(void)
 {
     char data = readGamepad();
 
