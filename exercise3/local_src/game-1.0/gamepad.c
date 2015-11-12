@@ -15,9 +15,9 @@ static char data;
 void setupGamepad(void)
 {
     struct sigaction action;
-    
+
     fd = open("/dev/gamepad", O_RDWR);
-    
+
     memset(&action, 0, sizeof(action));
     action.sa_handler = readDriver;
     action.sa_flags = 0;
@@ -31,7 +31,7 @@ void setupGamepad(void)
 void readDriver(int signo)
 {
     if (signo == SIGIO) {
-	read(fd, &data, 1);
+        read(fd, &data, 1);
     }
 }
 

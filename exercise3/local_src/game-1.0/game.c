@@ -44,11 +44,11 @@ int p2collide; // boolean if player 2 collides
 int main(int argc, char *argv[])
 {
     printf("Welcome!\nSW1 and SW3 controls red player\nSW5 and SW7 controls blue player\n");
-    
+
     // setup framebuffer and gamepad
     setupFB();
     setupGamepad();
-    
+
     // initialise game and run gameloop
     initGame();
     gameloop();
@@ -62,7 +62,7 @@ void initGame(void)
     player1.x = 80;
     player1.y = 120;
     player1.direction = 7;
-    
+
     player2.x = 240;
     player2.y = 120;
     player2.direction = 7;
@@ -70,13 +70,13 @@ void initGame(void)
     // set value to keep game running
     running = 1;
     exitgame = 0;
-    
+
     // clear board for fresh start
     clearBoard();
 }
 
 void gameloop(void)
-{    
+{
     // setup for keeping track of time
     struct timespec lastTime;
     struct timespec sleepTime;
@@ -84,14 +84,14 @@ void gameloop(void)
 
     // mainloop
     while (1) {
-	// sleep until next tick
-	timespecSince(&sleepTime, &lastTime);
-	sleepTime.tv_nsec = TICKTIME - sleepTime.tv_nsec; // assume tick time is less than one sec
-	nanosleep(&sleepTime, NULL);
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastTime);
-	
-	// execute tick function
-	tick();
+        // sleep until next tick
+        timespecSince(&sleepTime, &lastTime);
+        sleepTime.tv_nsec = TICKTIME - sleepTime.tv_nsec; // assume tick time is less than one sec
+        nanosleep(&sleepTime, NULL);
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &lastTime);
+
+        // execute tick function
+        tick();
     }
 }
 
@@ -99,21 +99,21 @@ void gameloop(void)
 void tick(void)
 {
     if (running) {
-	if (updatePlayers() == 0) {
-	    // when a collision is not deteted
-	    updateDirections();
-	} else {
-	    // when a collision is detected
-	    running = 0;
-	    printf("Press SW2 to restart or SW4 to exit\n");
-	}
+        if (updatePlayers() == 0) {
+            // when a collision is not deteted
+            updateDirections();
+        } else {
+            // when a collision is detected
+            running = 0;
+            printf("Press SW2 to restart or SW4 to exit\n");
+        }
     } else {
-	checkForRestart();
+        checkForRestart();
     }
     if (exitgame) {
-	printf("Stopping game\n");
-	exit(EXIT_SUCCESS);
-    }	
+        printf("Stopping game\n");
+        exit(EXIT_SUCCESS);
+    }
 }
 
 // function to move players and update screen returns 1 if collision, and 0 if no collision
@@ -121,7 +121,7 @@ int updatePlayers(void)
 {
     uint16_t blue = COLOR(0b00000, 0b000000, 0b11111);
     uint16_t red = COLOR(0b11111, 0b000000, 0b00000);
-    
+
     // variables used to prevent collision detection on old position
     int old1x = (int) player1.x;
     int old1y = (int) player1.y;
@@ -137,7 +137,7 @@ int updatePlayers(void)
     // draw on screen
     drawRect((int) player1.x, (int) player1.y, SNAKE_WIDTH, SNAKE_WIDTH, &red);
     drawRect((int) player2.x, (int) player2.y, SNAKE_WIDTH, SNAKE_WIDTH, &blue);
-    
+
     // check for collision
     p1collide = checkRect((int) player1.x, (int) player1.y, SNAKE_WIDTH, SNAKE_WIDTH, old1x, old1y);
     p2collide = checkRect((int) player2.x, (int) player2.y, SNAKE_WIDTH, SNAKE_WIDTH, old2x, old2y);
@@ -147,14 +147,14 @@ int updatePlayers(void)
     setRect((int) player2.x, (int) player2.y, SNAKE_WIDTH, SNAKE_WIDTH);
 
     if (p1collide == 1) {
-	printf("Game over!\nBlue player won, red player collided\n");
-	drawBitmap(160, 120, &trophy, &blue);
-	return 1;
+        printf("Game over!\nBlue player won, red player collided\n");
+        drawBitmap(160, 120, &trophy, &blue);
+        return 1;
     }
     if (p2collide == 1) {
-	printf("Game over!\nRed player won, blue player collided\n");
-	drawBitmap(160, 120, &trophy, &red);
-	return 1;
+        printf("Game over!\nRed player won, blue player collided\n");
+        drawBitmap(160, 120, &trophy, &red);
+        return 1;
     }
     return 0;
 }
@@ -163,7 +163,7 @@ int updatePlayers(void)
 void updateDirections(void)
 {
     char data = readGamepad();
-    
+
     if (!(data & 0b1)) { // SW1
         turnPlayer(&player1, 1);
     }
@@ -171,10 +171,10 @@ void updateDirections(void)
         turnPlayer(&player1, -1);
     }
     if (!(data & 0b10000)) { //SW5
-	turnPlayer(&player2, 1);
+        turnPlayer(&player2, 1);
     }
     if (!(data & 0b1000000)) { //SW7
-	turnPlayer(&player2, -1);
+        turnPlayer(&player2, -1);
     }
 }
 
@@ -184,13 +184,13 @@ void checkForRestart(void)
     char data = readGamepad();
 
     if (!(data & 0b10)) { // SW2
-	printf("Restarting game\n");
-	running = 1;
-	initGame();
-	clearScreen();
+        printf("Restarting game\n");
+        running = 1;
+        initGame();
+        clearScreen();
     }
     if (!(data & 0b1000)) { //SW4
-	exitgame = 1;
+        exitgame = 1;
     }
 }
 
@@ -199,21 +199,21 @@ void turnPlayer(struct snake *player, int d)
 {
     player->direction += d;
     if (player->direction < 0) {
-	player->direction += 30;
+        player->direction += 30;
     } else if (player->direction > 29) {
-	player->direction -= 30;
+        player->direction -= 30;
     }
-}    
+}
 
 // diffTime will get time difference between start and stop
 void getTimespecDiff(struct timespec *diffTime, struct timespec *start, struct timespec *stop)
 {
     diffTime->tv_sec = stop->tv_sec - start->tv_sec;
     if (stop->tv_nsec < start->tv_nsec) {
-	diffTime->tv_nsec = stop->tv_nsec + 1E9 - start->tv_nsec;
-	diffTime->tv_sec--;
+        diffTime->tv_nsec = stop->tv_nsec + 1E9 - start->tv_nsec;
+        diffTime->tv_sec--;
     } else {
-	diffTime->tv_nsec = stop->tv_nsec - start->tv_nsec;
+        diffTime->tv_nsec = stop->tv_nsec - start->tv_nsec;
     }
 }
 
