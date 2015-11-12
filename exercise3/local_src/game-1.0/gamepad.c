@@ -30,7 +30,6 @@ void setupGamepad()
 
 void readDriver(int signo)
 {
-    printf("signal handler running\n");
     if (signo == SIGIO) {
 	read(fd, &data, 1);
     }
