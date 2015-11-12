@@ -164,6 +164,8 @@ static int gpio_init(resource_size_t start_address)
     resource_size_t gpio_pc_address = start_address - 0x1B7;
     resource_size_t gpio_irq_address = start_address - 0xFF;
 
+    printk(KERN_DEBUG "GPIO PC: %#llx IRQ: %#llx", gpio_pc_address, gpio_irq_address);
+
     // request exclusive access to the GPIO port C memory region
     if (request_mem_region(gpio_pc_address, GPIO_PC_LENGTH, DEVICE_NAME) == NULL)
         return -EBUSY; // "device or resource busy"
