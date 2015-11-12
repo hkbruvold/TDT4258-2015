@@ -160,12 +160,8 @@ static irqreturn_t gpio_handler(int irq, void *dev_id)
 
 static int gpio_init(resource_size_t start_address)
 {
-    // random hardcoded offsets
-    resource_size_t gpio_pc_address = start_address - 0x1B7;
-    resource_size_t gpio_irq_address = start_address - 0xFF;
-
-    printk(KERN_DEBUG "Start address: %#lx", start_address);
-    printk(KERN_DEBUG "2 GPIO PC: %#lx IRQ: %#lx", gpio_pc_address, gpio_irq_address);
+    resource_size_t gpio_pc_address = start_address + GPIO_PC_BASE;
+    resource_size_t gpio_irq_address = start_address + GPIO_IRQ_BASE;
 
     // request exclusive access to the GPIO port C memory region
     if (request_mem_region(gpio_pc_address, GPIO_PC_LENGTH, DEVICE_NAME) == NULL)
@@ -197,9 +193,8 @@ static int gpio_init(resource_size_t start_address)
 
 static void gpio_exit(resource_size_t start_address)
 {
-    // random hardcoded offsets
-    resource_size_t gpio_pc_address = start_address - 0x1B7;
-    resource_size_t gpio_irq_address = start_address - 0xFF;
+    resource_size_t gpio_pc_address = start_address + GPIO_PC_BASE;
+    resource_size_t gpio_irq_address = start_address + GPIO_IRQ_BASE;
 
     // unmap and release memory regions
     iounmap(gpio_pc);
