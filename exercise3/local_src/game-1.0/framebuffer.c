@@ -13,6 +13,7 @@ static int fd;
 static uint16_t *screen;
 struct fb_copyarea rect;
 
+// will open framebuffer driver and clear screen
 void setupFB(void)
 {
   fd = open("/dev/fb0", O_RDWR);
@@ -21,6 +22,7 @@ void setupFB(void)
   clearScreen();
 }
 
+// tell the framebuffer to update screen on the given rectangle
 void updateRect(int dx, int dy, int width, int height)
 {
   rect.dx = dx;
@@ -30,12 +32,14 @@ void updateRect(int dx, int dy, int width, int height)
   ioctl(fd, 0x4680, &rect);
 }
 
+// clear the entire screen
 void clearScreen(void)
 {
   memset(screen, 0x00, 320*240*2);
   updateRect(0, 0, 320, 240);
 }
 
+// draw a rectangle of given size and color
 void drawRect(int x0, int y0, int width, int height, uint16_t *col)
 {
   int y;
