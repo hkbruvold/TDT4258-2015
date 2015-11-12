@@ -91,13 +91,10 @@ static int gamepad_probe(struct platform_device *platform_device)
 
     // get the platform driver resource
     struct resource *resource =
-        platform_get_resource(platform_device, IORESOURCE_MEM, 0);
+        platform_get_resource(platform_device, IORESOURCE_MEM, GPIO_MEM_INDEX);
 
-    gpio_irq_even = platform_get_irq(platform_device, 0);
-    gpio_irq_odd = platform_get_irq(platform_device, 1);
-
-    printk(KERN_DEBUG "GPIO start: %#llx end: %#llx\n", resource->start, resource->end);
-    printk(KERN_DEBUG "GPIO IRQ even: %d odd: %d\n", gpio_irq_even, gpio_irq_odd);
+    gpio_irq_even = platform_get_irq(platform_device, GPIO_EVEN_IRQ_INDEX);
+    gpio_irq_odd = platform_get_irq(platform_device, GPIO_ODD_IRQ_INDEX);
 
     // allocate character device with dynamic major number and one minor number
     err = alloc_chrdev_region(&device_number, 0, NUM_MINOR, DEVICE_NAME);
@@ -127,8 +124,11 @@ static int gamepad_probe(struct platform_device *platform_device)
 
 static int gamepad_remove(struct platform_device *dev)
 {
+    struct resource *resource =
+        platform_get_resource(platform_device, IORESOURCE_MEM, GPIO_MEM_INDEX);
+
     // unregister, delete and destroy everything
-    gpio_exit();
+    gpio_exit(resource->start);
     unregister_chrdev_region(device_number, NUM_MINOR);
     cdev_del(&char_device);
     device_destroy(cl, device_number);
@@ -156,19 +156,23 @@ static irqreturn_t gpio_handler(int irq, void *dev_id)
     return IRQ_HANDLED;
 }
 
-static int __init gpio_init(resource_size_t start_address)
+static int gpio_init(resource_size_t start_address)
 {
+    // random hardcoded offsets
+    resourse_size_t gpio_pc_address = start_address - 0x1B7;
+    resourse_size_t gpio_irq_address = start_address - 0xFF;
+
     // request exclusive access to the GPIO port C memory region
-    if (request_mem_region(GPIO_PC_BASE, GPIO_PC_LENGTH, DEVICE_NAME) == NULL)
+    if (request_mem_region(start_address, GPIO_PC_LENGTH, DEVICE_NAME) == NULL)
         return -EBUSY; // "device or resource busy"
 
     // map the GPIO port C ports to memory
-    gpio_pc = ioremap_nocache(GPIO_PC_BASE, GPIO_PC_LENGTH);
+    gpio_pc = ioremap_nocache(start_address, GPIO_PC_LENGTH);
 
     // request and map GPIO IRQ region
-    if (request_mem_region(GPIO_IRQ_BASE, GPIO_IRQ_LENGTH, DEVICE_NAME) == NULL)
+    if (request_mem_region(gpio_irq_address, GPIO_IRQ_LENGTH, DEVICE_NAME) == NULL)
         return -EBUSY;
-    gpio_irq = ioremap_nocache(GPIO_IRQ_BASE, GPIO_PC_LENGTH);
+    gpio_irq = ioremap_nocache(gpio_irq_address, GPIO_PC_LENGTH);
 
     // set pins to input with filter
     iowrite32(0x33333333, gpio_pc + GPIO_MODEL);
@@ -186,13 +190,17 @@ static int __init gpio_init(resource_size_t start_address)
     return 0;
 }
 
-static void __exit gpio_exit(void)
+static void gpio_exit(resource_size_t start_address)
 {
+    // random hardcoded offsets
+    resourse_size_t gpio_pc_address = start_address - 0x1B7;
+    resourse_size_t gpio_irq_address = start_address - 0xFF;
+
     // unmap and release memory regions
     iounmap(gpio_pc);
     iounmap(gpio_irq);
-    release_mem_region(GPIO_PC_BASE, GPIO_PC_LENGTH);
-    release_mem_region(GPIO_IRQ_BASE, GPIO_IRQ_LENGTH);
+    release_mem_region(gpio_pc_address, GPIO_PC_LENGTH);
+    release_mem_region(gpio_irq_address, GPIO_IRQ_LENGTH);
 }
 
 static int gamepad_open(struct inode *inode, struct file *filp)
@@ -255,7 +263,6 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
 
 static int __init gamepad_init(void)
 {
-
     return platform_driver_register(&gamepad_driver);
 
     return 0;
@@ -263,6 +270,7 @@ static int __init gamepad_init(void)
 
 static void __exit gamepad_exit(void)
 {
+    platform_driver_unregister(&gamepad_driver);
 }
 
 module_init(gamepad_init);
