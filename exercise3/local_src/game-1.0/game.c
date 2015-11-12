@@ -7,6 +7,7 @@
 #include "framebuffer.h"
 #include "board.h"
 #include "gamepad.h"
+#include "bitmap.h"
 
 #define PI 3.14159265
 
@@ -147,10 +148,12 @@ int updatePlayers(void)
 
     if (p1collide == 1) {
 	printf("Game over!\nBlue player won, red player collided\n");
+	drawBitmap(160, 120, &trophy, &blue);
 	return 1;
     }
     if (p2collide == 1) {
 	printf("Game over!\nRed player won, blue player collided\n");
+	drawBitmap(160, 120, &trophy, &red);
 	return 1;
     }
     return 0;
