@@ -1,0 +1,12 @@
+Vanilla kernel
+    Interrupts/signals:
+        Idle, driver loaded: 10.5 mA
+        Game idle: ~10.9 mA
+        Game running: 11.1 mA
+    Polling:
+        Difference can't be measured
+
+Configured kernel (tickless idle, opportunistic sleep):
+    Idle: 8.1 mA
+    Game idle: 9.2 mA
+    Game running: 9.5 mA
