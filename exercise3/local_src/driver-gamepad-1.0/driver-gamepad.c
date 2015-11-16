@@ -117,7 +117,7 @@ static int __init gamepad_probe(struct platform_device *platform_device)
         return PTR_ERR(dev);
 
     // initialize GPIO
-    err = __init gpio_init(resource->start);
+    err = gpio_init(resource->start);
     if (err < 0)
         return err;
 
