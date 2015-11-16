@@ -18,14 +18,17 @@ void setupGamepad(void)
 
     fd = open("/dev/gamepad", O_RDWR);
 
+    // clear the struct and set handler to readDriver function
     memset(&action, 0, sizeof(action));
     action.sa_handler = readDriver;
     action.sa_flags = 0;
 
+    // register the struct to the signal SIGIO
     sigaction(SIGIO, &action, NULL);
 
-    fcntl(fd, F_SETOWN, getpid());
-    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | FASYNC);
+    
+    fcntl(fd, F_SETOWN, getpid()); // set this process as owner of file
+    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | FASYNC); // enable async notification
 }
 
 void readDriver(int signo)
