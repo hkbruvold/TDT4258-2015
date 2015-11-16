@@ -12,6 +12,7 @@
 static int fd;
 static char data;
 
+// Set up interrupt and handler
 void setupGamepad(void)
 {
     struct sigaction action;
@@ -31,6 +32,7 @@ void setupGamepad(void)
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | FASYNC); // enable async notification
 }
 
+// Handler for interrupt
 void readDriver(int signo)
 {
     if (signo == SIGIO) {
@@ -38,6 +40,7 @@ void readDriver(int signo)
     }
 }
 
+// Function to return latest gamepad state
 char readGamepad(void)
 {
     return data;
