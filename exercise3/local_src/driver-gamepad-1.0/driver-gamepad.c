@@ -50,7 +50,7 @@ static int __init gamepad_init(void);
 static void __exit gamepad_exit(void);
 
 // gpio
-static int gpio_init(resource_size_t start_address);
+static int __init gpio_init(resource_size_t start_address);
 static void gpio_exit(resource_size_t start_address);
 
 // platform device functions
@@ -117,7 +117,7 @@ static int __init gamepad_probe(struct platform_device *platform_device)
         return PTR_ERR(dev);
 
     // initialize GPIO
-    err = gpio_init(resource->start);
+    err = __init gpio_init(resource->start);
     if (err < 0)
         return err;
 
@@ -158,7 +158,7 @@ static irqreturn_t gpio_handler(int irq, void *dev_id)
     return IRQ_HANDLED;
 }
 
-static int gpio_init(resource_size_t start_address)
+static int __init gpio_init(resource_size_t start_address)
 {
     resource_size_t gpio_pc_address = start_address + GPIO_PC_BASE;
     resource_size_t gpio_irq_address = start_address + GPIO_IRQ_BASE;
