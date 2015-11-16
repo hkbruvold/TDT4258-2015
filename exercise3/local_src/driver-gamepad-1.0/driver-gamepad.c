@@ -54,7 +54,7 @@ static int gpio_init(resource_size_t start_address);
 static void gpio_exit(resource_size_t start_address);
 
 // platform device functions
-static int gamepad_probe(struct platform_device *dev);
+static int __init gamepad_probe(struct platform_device *dev);
 static int gamepad_remove(struct platform_device *dev);
 
 // interrupt handler
@@ -86,7 +86,7 @@ static struct platform_driver gamepad_driver = {
     }
 };
 
-static int gamepad_probe(struct platform_device *platform_device)
+static int __init gamepad_probe(struct platform_device *platform_device)
 {
     int err;
     struct device *dev;
@@ -263,7 +263,7 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
 
 static int __init gamepad_init(void)
 {
-    return platform_driver_register(&gamepad_driver);
+    return platform_driver_register(&gamepad_driver, &gamepad_probe);
 
     return 0;
 }
