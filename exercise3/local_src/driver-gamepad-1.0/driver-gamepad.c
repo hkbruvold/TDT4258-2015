@@ -263,7 +263,7 @@ static ssize_t gamepad_read(struct file *filp, char __user *buff,
 
 static int __init gamepad_init(void)
 {
-    return platform_driver_register(&gamepad_driver, &gamepad_probe);
+    return platform_driver_probe(&gamepad_driver, &gamepad_probe);
 }
 
 static void __exit gamepad_exit(void)
