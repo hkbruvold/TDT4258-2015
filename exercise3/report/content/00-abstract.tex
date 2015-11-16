@@ -1,0 +1,12 @@
+\begin{abstract}
+%fra rapport 1
+%abstract: consider adding a comparison/improvement indicator (e.g 50x improvement, 100x less power with interrupts etc.) for a stronger impression
+
+%fra rapport 2
+% a better abstract and introduction (general motivation, summary of features and results in the introduction). document somewhere (either intro or methodology) which button is supposed to do what.
+
+For the third exercise in TDT4258 Energy Efficient Computer Design, we implement a Linux character device driver and a simple game for the EFM32GG-DK3750 development board. The specific flavor of Linux used is uClinux. We implement a clone of the classic DOS game ``Cervii'' from 1993, using the integrated LCD screen for output, and a GPIO gamepad for input. The device driver is used to interface with the gamepad over GPIO.
+
+By making use of concepts such as interrupts and signals, as well as certain Linux kernel configurations, we managed to reduce the energy usage of the running game by about 15\%.
+
+\end{abstract}

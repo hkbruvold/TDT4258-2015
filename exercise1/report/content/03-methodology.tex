@@ -1,0 +1,81 @@
+\chapter{Methodology}
+Our implementation of this exercise is fairly simple. Each button is mapped to one LED, when you press a button, the corresponding LED will turn on. In order for the buttons and LEDs to function, we had to turn on the GPIO controller and configure it by writing certain bits to registers in the memory mapped section of the memory.
+
+Our implementation is two-part: a chunk of setup code that executes on each reset of the microcontroller as described in section~\ref{sec:setup}, and an exception handler that executes on GPIO interrupts, as described in section~\ref{sec:exceptions}.
+
+\section{Compilation}
+The code is assembled and linked using the GNU as and gcc tools; more specifically, the arm-none-eabi variants of these programs. The objcopy program is used for stripping the ELF headers from the resulting binary, and the program is uploaded to the microcontroller using the eACommander program. The exact commands are shown in listing~\ref{lst:buildcommands}. We used GNU Make in order to automate the process.
+
+\begin{lstlisting}[label=lst:buildcommands, caption=Commands used to build and upload code.]
+arm-none-eabi-as -mcpu=cortex-m3 -mthumb -g ex1.s -o ex1.o
+arm-none-eabi-gcc -T efm32gg.ld ex1.o -o ex1.elf -nostdlib
+arm-none-eabi-objcopy -j .text -O binary ex1.elf ex1.bin
+eACommander.sh -r --address 0x00000000 -f "ex1.bin" -r
+\end{lstlisting}
+
+\section{Setup}
+\label{sec:setup}
+The CMU, Clock Management Unit, controls all the clocks on the EFM32GG, which in turn drives the different modules on the development board. We needed the High Frequency Peripheral Clock, or just HFPERCLK, to drive the GPIO controller. In the CMU\_HFPERCLKEN0 register, bit 13 controls the GPIO, see reference manual\cite{efm32ggrm} section 11.5.18. We enabled the GPIO by writing a 1 to that bit in the register, as seen in listing~\ref{lst:cmu}.
+
+\begin{lstlisting}[label=lst:cmu, caption=Enabling the GPIO clock.]
+// load base address to r1
+ldr r1, =CMU_BASE
+
+// load CMU_HFPERCLKEN0 to r2
+ldr r2, [r1, #CMU_HFPERCLKEN0]
+
+// set the GPIO bit
+mov r3, #1
+lsl r3, r3, #CMU_HFPERCLKEN0_GPIO
+orr r2, r2, r3
+
+// store new settings in memory. the changes will now be applied
+str r2, [r1, #CMU_HFPERCLKEN0]
+\end{lstlisting}
+
+Next thing to configure was the LEDs and buttons. For the LEDs to work, the GPIO had to be configured so that the pins connected to the LEDs are set to output and that they delivers enough current. The gamepad was designed to use GPIO port A pin 8-15 for the LEDs. The GPIO\_PA\_CTRL register uses bit 0 and 1 to configure the drive strength on port A, see reference manual\cite{efm32ggrm} section 32.5.1. This value can be set to four values: \texttt{STANDARD} (6mA), \texttt{LOWEST} (0.5mA), \texttt{HIGHEST} (20mA) and \texttt{LOW} (1mA). Setting the GPIO\_PA\_CTRL register to the value 0x3, \texttt{LOW}, is shown in listing~\ref{lst:gpio_ctrl} The GPIO\_PA\_MODEH register sets the mode for GPIO port A pin 8-15. The mode which is best suited for the LEDs is PUSHPULLDRIVE, Push-pull output with drive-strength set by DRIVEMODE, see reference manual\cite{efm32ggrm} section 32.5.3.
+
+\begin{lstlisting}[label=lst:gpio_ctrl, caption=Setting GPIO port A alternate drive strength.]
+ldr r1, =GPIO_PA_BASE
+ldr r2, [r1, #GPIO_CTRL]
+orr r2, r2, #0x3
+str r2, [r1, #GPIO_CTRL]
+\end{lstlisting}
+
+The buttons had to be configured as output and to use a pull-up resistor. The gamepad was designed to use GPIO port C pin 0-7 for the buttons. To set the pins to be used as output, we had to set the GPIO\_PC\_MODEL bits to value 3, input enabled with filter, see reference manual\cite{efm32ggrm} section 32.5.2. In addition, the GPIO controller would read the GPIO\_PC\_DOUT register to determine if the pins should be configured as pull-up or pull-down. By writing 1 to bit 0-7 in that register, the pin 0-7 was configured as pull-up. The configured mode 3 is input with filter enabled, this filter is described as a glitch suppression filter, see reference manual\cite{efm32ggrm} section 32.3.1. The filter prevents the controller from firing more than one interrupt when a button is pressed, it does the same job as a debounce function would do.
+
+To enable interrupts we had to configure both the GPIO controller and an interrupt controller in the microcontroller. The GPIO\_EXTIPSELL, External Interrupt Port Select Low, register can be configured to enable firing of interrupts on pin 0-7 on the different ports on the GPIO, see reference manual\cite{efm32ggrm} section 32.5.10. We used port C for the buttons, and therefore we configured the GPIO controller to watch port C. The GPIO\_EXTIRISE and GPIO\_EXTIFALL configures if an interrupt should fire on rising edge (button pushed down) and/or falling edge (button released). Because we wanted the LED to turn on when a button is pressed and turn off when the button is released again, we enabled interrupt on pin 0-7 on both registers. Finally on the GPIO controller, interrupt is enabled in the GPIO\_IEN, GPIO Interrupt Enable, register. What interrupts are enabled by the interrupt controller on the microcontroller is set in the ISER0, Interrupt Set-enable Register\cite{cortexm3rm}. The interrupt controller has a feature to enable interrupt on even or odd pins separately, bit 1 is for even pins and bit 11 is for odd pins. We used both even and odd pins, so we enabled both bits. The interrupt handler addresses are defined in the vector section in the code.
+
+Lastly we configured the sleep function of the microcontroller. The SCR, System Control Register, is a register on the microcontroller that controls how tho microcontroller handles sleep, see reference manual\cite{cortexm3rm} section 4.3.7. By writing 1 to bit 1 and 2, we set the cpu to use deep sleep and to resume deep sleep after an interrupt. Because all the logic for buttons and LEDs are in the exception handler, we simply activated sleep at this point using the \texttt{wfi} command.
+
+\section{Exception handling}
+\label{sec:exceptions}
+
+GPIO interrupts are handled under a label \texttt{gpio\_handler}. In it, we read the input bits from the gamepad buttons on GPIO port C. Because the buttons are on pins 0-7 and the LED outputs are on pins 8-15 (albeit on port A), we shift the input bits 8 places to the left. These values are then written to GPIO port C, where the LEDs are connected. This is shown in listing~\ref{lst:exc1}.
+
+\begin{lstlisting}[label=lst:exc1, caption=Reading input pins from port C and writing output bits on port A.]
+ldr r1, =GPIO_PA_BASE
+ldr r2, =GPIO_PC_BASE
+ldr r3, [r2, #GPIO_DIN]
+lsl r3, 8
+str r3, [r1, #GPIO_DOUT]
+\end{lstlisting}
+
+Afterwards, the interrupt is cleared by writing the value of \texttt{GPIO\_IF} to \texttt{GPIO\_IFC}, and we return from the handler using the \texttt{bx} instruction.
+
+\section{Testing}
+\label{sec:testing}
+
+Our implementation was primarily tested by depressing the buttons on the gamepad, verifying that the LEDs lighted up when appropriate.
+
+In addition, GDB was used via a provided JLinkGDBServer program to verify that the GPIO interrupts fired correctly. We made sure only one interrupt was fired for each button press. To do this, we issued the GDB commands in listing \ref{lst:gdb-commands}, which cause a message to be logged each time the \texttt{gpio\_handler} label is reached. We then pressed buttons while monitoring GDB output.
+
+The energy efficiency of our implementation was measured using the eAProfiler program, reading the ``Running average'' current after it stabilized.
+
+\begin{lstlisting}[label=lst:gdb-commands, caption=Setting a breakpoint at the GPIO exception handler]
+break gpio_handler
+commands
+printf "gpio_handler"
+cont
+end
+\end{lstlisting}

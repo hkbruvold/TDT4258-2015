@@ -1,0 +1,65 @@
+\chapter{Background and Theory}
+
+%fra rapport 1
+%background: needs more content. organize into subsections and add more content on the relevant background topics (some examples: a general overview of polling vs interrupts and their energy efficiency implications, EFM32s energy modes, relevant figures/tables/etc from manuals with references)
+
+%fra rapport 2
+%background can be expanded with more content on what's already written, plus CMU/EMU and energy efficiency. don't use new terms without introducing/describing them (e.g DMA). more background on sound synthesis, waveforms, sample rate & Nyquist theorem, how it is done on a microcontroller with DACs and timers, how it relates to energy efficiency, etc.
+\section{Hardware}
+For the exercise, an EFM32GG-DK3750 development kit from Silicon Labs was used. It features an ARM Cortex-M3 CPU core, multiple IO capabilities, and an energy monitoring system. The development kit has a large focus on energy efficiency, and all individual components are turned off by default, meaning they must be enabled in order to be used. A gamepad peripheral which consists of 8 pushable buttons and 8 LED lights was used for input and output purposes, as well as the on-board LCD display.
+
+\section{CMU}
+The Clock managment unit is responisble for controlling clocks and oscillators. One must enable the bit in memory responsible for the clock signal to enable a clock. It can be used to enable I/O devices, most notably in this exercise the GPIO. One can use different clock sources to conserve energy, but this is easier done with energy modes. 
+
+\section{EMU}
+The Energy managment unit is used to enter low energy modes. There are five different energy modes availeble: EM0 (standard active mode), EM1, EM2, EM3, and EM4 (the lowest energy consumption level). The EMU disables different units on the board to lower consumption and the CPU can enter sleepmode. While in deep sleep, the Wakeup Interrupt controller wakes the CPU during an interrupt. When choosing which energy mode to use, it is important to consider many different factors such as restart frequency, what units are required to operate the current program etc.
+
+Other ways to save power are for example to turn off unnecessary SRAM that is not being used by the system and make the CPU sleep as mush as possible. 
+
+\section{GPIO}
+The EFM32GG development board has five GPIO ports named A through E, where each port has 16 pins. The GPIO pins can be confgured in many ways including input with filter and output with different drive strengths. The usage of filter on input will eliminate any bouncing effect when a button is pressed, meaning that the board will not pick up several edge changes when a button is pressed only once. Communication with GPIO is done via special memory locations called I/O ports.
+
+\section{Interrupts}
+Many of the peripherals on the development board, including GPIO, support the use of interrupts. When the processor receives an IRQ, an interrupt request, it will halt the code currently being executed and jump to an ISR, an interrupt service routine, and execute it. Once the interrupt has been handled, the processor returns to the code previously being executed. The number of hardware interrupts on a system is limited by the number of IRQ lines on the CPU.
+
+Interrupts can be used in lots of applications, for example a timer firing, or a GPIO input pin changing its state. The alternative to using interrupts is having the CPU check the status regularly. This is called polling. It requires keeping the CPU constantly running so that it doesn't miss out on any changes. Because of this, the CPU can not enter sleep, and will be less energy efficient.
+
+\section{Linux and uClinux}
+Linux is a open-source operating system. The operating system controls hardware access, memory access and other resources.
+
+uClinux is a Linux distribution aimed at microcontrollers, which makes it optimal for this course as an operating system to be used on the EFM32GG development board. It started as a fork of the Linux kernel for microcontrollers, but was later integrated into the main line of development. 
+
+\subsection{The Linux kernel}
+The Linux kernel is core of the Linux operating systems. A kernel is the lowest modifiable software that interfaces with the hardware in the system. It connects the user space applications to the hardware and allows processes to communicate with each other.
+
+The Linux kernel has two different execution contexts --- kernel space, and user space. User space is where regular applications, like your web browser or instant messaging program, reside. Kernel space is where the Linux kernel code and kernel module code is executed. The largest difference between the two is that user space code is controlled and restrained by the kernel, but in kernel space, code can do anything.
+
+\section{Kernel modules}
+Loadable kernel modules are dynamically loadable code that is used to extend the functionality of the Linux kernel. A common use is device drivers, kernel modules that add the capability to interface with devices the Linux kernel itself can't use. Kernel modules make it easy to support new devices, as you don't have to recompile the kernel to integrate the functionality.
+
+The reason kernel modules are necessary is that regular user space programs are not able to interface with hardware directly. A kernel module runs in kernel space, and has direct access to hardware and Linux kernel functionality.
+
+\subsection{Character device drivers}
+A character device driver is a certain kind of device driver that transfers data to and from user space via a ``device'', which is typically a file that resides in \texttt{/dev} on a Linux system. It is not a regular file --- when a user space program tries to open, read from or write to the file, special functions in the device driver are called and expected to handle the requests.
+
+\subsection{Platform device drivers}
+A platform device driver is used for hardware devices that are interfaced by direct addressing from the CPU\cite{kernelplatformdrivers}. By using the platform driver API, one avoids having to hardcode memory locations and IRQ lines by acquiring that information from the platform device.
+
+\subsection{Linux timers and tickless idle}\label{sec:tickless}
+During normal operation, the Linux kernel has a timer that wakes it up to perform work at a constant rate. Each timer interrupt is known as a \textit{tick}. An alternate mode, called tickless idle, uses a dynamic timer rate instead, enabling the kernel to sleep for longer when no work has to be done. This reduces energy usage, but increases complexity.
+
+\section{The Linux frame buffer}
+The integrated display on the EFM32GG is a thin-film-transistor liquid-crystal display; TFT LCD for short. Its size is 320 by 240 pixels, with 16 bits color depth for each pixel.  It can be interfaced with using the Linux frame buffer, a hardware-independent character device that provides an abstraction for graphics hardware\cite{kernelframebuffer}.
+
+The frame buffer is used by writing pixel data to the appropriate location in the device file, typically \texttt{/dev/fb0} or similar. When a refresh is requested using the \texttt{ioctl} interface, the screen will show the new frame buffer data. \texttt{ioctl} is a system call used to perform operations on devices that can't be done by regular writing to the device file.
+
+\section{Memory-mapped file I/O}
+Memory-mapping a file creates a byte-for-byte mapping between a file and the virtual memory of the process. The virtual memory of a process is a set of memory addresses that don't have an inherent meaning outside of the mappings provided by the operating system.
+
+Memory-mapping files can improve performance and simplify file I/O. Instead of using regular file access functions like \texttt{lseek} and \texttt{write}, one can simply write the data directly to a memory location. This makes it easy to work with devices such as the Linux frame buffer.
+
+\section{Signals}
+Signals are a Unix concept that provide a form of inter-process communication. They can also be used within the kernel to send notifications to user space processes. A common usage for character device drivers is to send \texttt{SIGIO} signals to user space programs when new data is ready.
+
+\section{PTXdist}
+PTXdist is a build system used to build the Linux kernel and user space programs for embedded platforms such as the EFM32GG.

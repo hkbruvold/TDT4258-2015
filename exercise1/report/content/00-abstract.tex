@@ -1,0 +1,5 @@
+\begin{abstract}
+This report introduces assembly programming for the EFM32GG-DK3750 development board, including interrupt handling, GPIO and energy optimizations. The goal of the exercise was to implement a simple interaction between buttons and LEDs on a gamepad  using the GPIO pins on the development board. The assembly code was built and debugged using the GNU toolchain, and flashed and profiled using the eACommander and eAProfiler programs.
+
+A solution where each button on the gamepad maps to a separate LED was implemented. Energy efficiency was achieved by using GPIO interrupts for the buttons (as opposed to polling) and by enabling sleep mode on the microcontroller.
+\end{abstract}

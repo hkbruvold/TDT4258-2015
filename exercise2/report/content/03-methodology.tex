@@ -1,0 +1,148 @@
+\chapter{Methodology}
+%This chapter should discuss the details of your implementation for the assignment. 
+%Everything related to \emph{how} things were done should go here.
+%Remember to avoid going into too much details, summarize appropriately and try to use figures/charts.
+%Make sure you refer to the figures (such as Figure \ref{fig:universe}) and charts you add in the text.
+%Avoid putting lots of source code here -- small code snippets are fine if you want to discuss something specific.
+% fra rapport 1
+% - start the methodology chapter with a general overview of the solution and a summary of what you're going to present in the chapter.
+\section{Compilation}
+The code is compiled and linked using arm-none-eabi-gcc, the GNU GCC cross compiler for ARM Cortex microcontrollers. The objcopy program is used for stripping the ELF headers from the resulting binary, and the program is uploaded to the microcontroller using the eACommander program. GNU Make is used to automate the process.
+
+\section{Peripherals}
+Our implementation uses three peripherals on the development kit: GPIO, the DAC, and a timer. We implemented both TIMER1, a ``normal'' timer, and LETIMER0, a low-energy timer. We use a C preprosessor definition, \texttt{USE\_LETIMER}, to change between the two implementation when building our code.
+
+\subsection{GPIO}
+The GPIO clock is enabled by setting bit 13 in CMU\_HFPERCLKEN0. GPIO port A pins 8-15 are set to output with high drive strength, and GPIO port C pins 0-7 are set to pull-up with input using input filter. Interrupts on falling edge for port C pins is also enabled. Because the pins are pull-up, falling edge is when the buttons are pressed down.
+
+\subsection{DAC}
+The DAC clock is enabled by setting bit 17 in CMU\_HFPERCLKEN0. DAC output to the amplifier is enabled by setting OUTMODE in DAC0\_CTRL to 2. The prescaler setting, PRESC, in DAC0\_CTRL is set to 5, giving a clock division factor of $2^5$. The DAC is then running with a frequency of $\frac{14}{2^5}\mathrm{MHz} = 437.5\mathrm{KHz}$. Both DAC channels are enabled by setting DAC\_CH0CTRL and  DAC\_CH1CTRL to 1.
+
+The code for setting up the DAC is shown in Listing~\ref{lst:dac_setup}.
+
+\begin{lstlisting}[language=c, label=lst:dac_setup, caption=Setting up DAC0.]
+*CMU_HFPERCLKEN0 |= 1 << 17; // enable clock
+*DAC0_CTRL = 0x50010; // set frequency and output
+*DAC0_CH0CTRL = 1; // enable DAC channel 0
+*DAC0_CH1CTRL = 1; // enable DAC channel 1
+\end{lstlisting}
+
+\subsection{Timer}
+The initial implementation used TIMER1, a general purpose 16-bit timer. To enable the timer clock, we set bit 6 in CMU\_HFPERCLKEN0. The timer period, given as the amount of timer ticks before it resets, is set in TIMER1\_TOP. Because our target sample rate is 32768Hz, we set the TOP value to $\frac{14\mathrm{MHz}}{32768\mathrm{Hz}} \approx 427$. 
+
+Telling the timer to generate interrupts on reset is done by setting bit 1 in TIMER1\_IEN. The timer is started and stopped by setting bits 1 and 2, respectively, in TIMER1\_CMD.
+
+The code for setting up and starting the timer is shown in Listing~\ref{lst:timer_setup}.
+
+\begin{lstlisting}[language=c, label=lst:timer_setup, caption=Setting up and starting TIMER1.]
+*CMU_HFPERCLKEN0 |= 1 << 6; // enable clock
+*TIMER1_TOP = 427;
+*TIMER1_IEN |= 1; // enable interrupt generation
+*TIMER1_CMD |= 1; // start
+\end{lstlisting}
+
+\subsection{Low-energy timer}
+In order to improve energy efficiency, our final implementation uses LETIMER0, a low-energy timer. Its setup is more complicated than the regular timer. However, this pays off, as the low-energy timer is able to function down to energy mode 2 (deep sleep).
+
+First, the 32768Hz Low Frequency Crystal Oscillator (LFXO) is enabled by setting LFXOEN (bit 8) in CMU\_OSCENCMD. Next, the LFA value in CMU\_LFCLKSEL is set to 2, setting LFXO to be the Low Frequency A Clock. LFXOTIMEOUT in CMU\_CTRL is set to 3, giving the LFXO a timeout period of 32768 cycles.
+
+Next up is enabling the clock for low-energy peripherals in CMU\_HFCORECLKEN0, by setting bit 4 (LE). The clock for LETIMER0 is enabled by setting bit 2 in CMU\_LFACLKEN0.
+
+LETIMER0 is told to use the COMP0 value, which we set to 0, by setting COMP0TOP (bit 9) in LETIMER0\_CTRL. Interrupts on underflow are enabled by setting UF (bit 2) in LETIMER0\_IEN. The low energy timer is started and stopped in a similar manner as the regular timer, by setting bits 1 and 2 in LETIMER0\_CMD.
+
+The code for setting up and starting the low energy timer is shown in Listing~\ref{lst:letimer_setup}.
+
+\begin{lstlisting}[language=c, label=lst:letimer_setup, caption=Setting up and starting LETIMER0.]
+// set up LFXO
+*CMU_OSCENCMD |= 1 << 8;
+*CMU_LFCLKSEL &= ~0x3 << 0;
+*CMU_LFCLKSEL |= 2 << 0;
+*CMU_CTRL &= ~3 << 18;
+// set up LETIMER0
+*CMU_HFCORECLKEN0 |= 1 << 4;
+*CMU_LFACLKEN0 |= 1 << 2;
+*LETIMER0_CTRL |= 1 << 9;
+*LETIMER0_COMP0 = 0x0;
+*LETIMER0_IEN |= 1 << 2;
+// start
+*LETIMER0_CMD |= 1;
+\end{lstlisting}
+
+\section{Playing sound}
+
+To play sound, sound samples has to be written continuously to the DAC. This is done from the timer interrupt handler. We implemented two kinds of sound; random noise, and sine-wave music.
+
+\subsection{Random noise}
+\label{sec:random_noise}
+In order to make sure the DAC was set up correctly, we initially wrote random data to it, generating noise. Because the DAC is a 12-bit DAC, this random data was in the half-open range $[0,2^{12})$. This is shown in Listing~\ref{lst:dac_random}.
+
+We had an idea to use this random noise as a sound effect, and by fading it out using a duration parameter, and with some creative imagination, this can be interpreted as a kind of ``crash'' sound. The sound effect data is created using the following formula, where $duration$ starts out as $max\_duration$ and counts down to 0:
+
+$$\frac{\mathrm{rand()} \cdot duration}{max\_duration}.$$
+
+In our code, the effect duration is set to 16384, giving a half-second sound. The code for playing a single sample in the sound effect is shown in Listing~\ref{lst:sound_effect}.
+
+\begin{lstlisting}[language=c, label=lst:dac_random, caption=Writing random data to DAC0 channels 1 and 2.]
+*DAC0_CH0DATA = rand() % (1 << 12);
+*DAC0_CH1DATA = rand() % (1 << 12);
+\end{lstlisting}
+
+\begin{lstlisting}[language=c, label=lst:sound_effect, caption=Playing a sound effect.]
+*DAC0_CH0DATA = ((rand() % (1 << 12)) * effect_duration) / MAX_EFFECT_DURATION;
+*DAC0_CH1DATA = ((rand() % (1 << 12)) * effect_duration) / MAX_EFFECT_DURATION;
+--effect_duration;
+\end{lstlisting}
+
+\subsection{Music}
+In order to get ``proper'' sound, and not random noise, we need to output samples of a wave function. We decided on generating sine waves and writing those to the DAC.
+
+The sine wave samples to play back are pregenerated by a Python program that generates C source files containing the data. In the Python program, we define the musical tones we wish to use along with their frequencies, and the program generates a C array containing the samples for a single period of the waves.
+
+For example, for the tone $A_5$, which is 880Hz \cite{notefreqs}, the program will generate $\frac{32768\mathrm{Hz}}{880\mathrm{Hz}} \approx 37$ samples.
+
+In order to play songs, we created some C structs to be able to define them. \texttt{tone\_t} is a struct holding an array of samples. \texttt{note\_t} is a pointer to a tone and a duration in samples. Finally, \texttt{song\_t} holds an array of notes to be played in succession.
+
+To play a song, samples from the first note's tone is played for the duration of the tone. Then, the next note from the song is played, and so on. 
+
+\section{Final touches}
+We mapped GPIO button presses to different songs, as well as one to the sound effect from Section~\ref{sec:random_noise}. Any unused buttons are mapped to stop the sound. When there is no sound playing, the timer is stopped.
+
+When using the low-energy timer, we can enter energy mode 2, called deep sleep. This is done by setting the SLEEPDEEP (bit 2) in the system control register. We also set SLEEPONEXIT, bit 1, in order to automatically return to sleep after handling an interrupt. Enabling and entering sleep is shown in Listing~\ref{lst:sleep}.
+
+\begin{lstlisting}[language=c, label=lst:sleep, caption=Enabling deep sleep and entering sleep.]
+*SCR |= 1 << 1; /* automatic sleep after interrupt */
+#ifdef USE_LETIMER
+*SCR |= 1 << 2; /* deep sleep, energy mode 2 */
+#endif
+
+__asm__("wfi"); /* go into sleep (wait for interrupt) */
+\end{lstlisting}
+
+\section{Testing}
+
+% fra rapport 1: 
+% -testing: try to develop a more concrete testing plan. things like repeated button presses, pressing buttons simultaneously etc. may make interesting corner cases to cover. for instance, you could organize this as a list of scenarios with a test case, expected result and observed result.
+
+We began rudimentary testing after we set up the DAC, timer and interrupt handling. We feed random samples of data into the DAC0\_CHnDATA registers which produced sound. We confirmed the sample period had an effect when we changed it to different values and the sound produced changed in volume/intesity/speed/idk
+\\\\
+To help us debug and keep track of how the program was running in real time, we set up the interrupt handling to increase GPIO output (changing the lights on the gamepad peripheral, essentially making it count in binary with the lights) to let us easily see if the timer was running. If the lights stopped changing we knew the program had crashed. 
+\\
+When we were doing final testing we used Table \ref{tab:testing}
+\begin{table}[h]
+\begin{tabular}{|1|1|1|1|}
+Test & Expected outcome & Outcome & Comment \\\hline
+Press button 1 & Play sound 1 & Expected & None \\\hline
+Press button 2 & Play sound 2 & Expected & None \\\hline
+Press button 3 & Play sound 3 & Expected & None \\\hline
+Press button 4 & Stop sound & Expected & None \\\hline
+Press button 5 & Stop sound & Expected & None \\\hline
+Press button 6 & Stop sound & Expected & None \\\hline
+Press button 7 & Stop sound & Expected & None \\\hline
+Press button 8 & Stop sound & Expected & None \\\hline
+Press multiple buttons & Play sound of last pressed & Expected & None \\\hline
+Releasing button before sound is over & Sound continues & Expected & None \\\hline
+Resetting board mid sound & Sound end & Expected & None
+\end{tabular}
+\caption{Testing table}
+\label{tab:testing}
+\end{table}

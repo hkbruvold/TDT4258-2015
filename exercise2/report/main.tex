@@ -1,0 +1,63 @@
+% A simple LaTeX template for lab reports in TDT4258 Energy Efficient Computer Design
+% by Yaman Umuroglu (yamanu@idi.ntnu.no)
+% Feel free to customize the style as you see fit, but the chapters/sections mentioned in the
+% template should be included with the appropriate content.
+
+\documentclass[abstract=on]{scrreprt}
+\usepackage[utf8]{inputenc}
+
+
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{url}
+ 
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
+
+% Edit the meta.tex file to change title, group number and author names
+\input{meta.tex}
+
+
+\begin{document}
+% The title page, edit if you want to customize it
+\input{title.tex}
+
+
+% Main matter - edit corresponding file under content/ to change
+\input{content/00-abstract.tex}
+\input{content/01-introduction.tex}
+\input{content/02-background.tex}
+\input{content/03-methodology.tex}
+\input{content/04-results.tex}
+\input{content/05-conclusion.tex}
+
+
+% Bibliography - edit references.bib and use the \cite command in text
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}

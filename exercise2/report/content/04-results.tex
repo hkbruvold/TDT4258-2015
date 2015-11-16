@@ -1,0 +1,22 @@
+\chapter{Results}
+Our implementation works as intended, and plays music and a sound effect through the audio out headphone jack when GPIO buttons are pressed.
+
+\section{Energy usage}
+Our implementation can use two different timers, the regular timer TIMER1 and the low-energy timer LETIMER0. For each timer, we took three measurements --- idle usage, usage while playing a song, and usage while playing the sound effect. The results are shown in Table~\ref{tab:current}.
+
+The idle current of LETIMER0 is eight times lower than that of TIMER1. This is attributed to the LETIMER0 implementation entering deep sleep.
+
+It is interesting to note that while comparable, the usages of TIMER1 while playing sounds are slightly lower than those of LETIMER0. Even taking these results into account, the idle usage of LETIMER0 makes us prefer that implementation.
+
+In addition to these readings, we noticed an expected and normal leakage of approximately 80$\mu$A while a button was being held down.
+
+\begin{table}
+\centering
+\begin{tabular}{cccc}
+Timer & Idle current (mA) & Music (mA) & Sound effect (mA) \\\hline
+TIMER1 & 1.60 & 3.24 & 3.67 \\
+LETIMER0 & 0.200 & 3.32 & 3.91 
+\end{tabular}
+\caption{Average current readings from eAProfiler program.}
+\label{tab:current}
+\end{table}

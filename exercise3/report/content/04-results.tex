@@ -1,0 +1,42 @@
+\chapter{Results}
+%fra rapport 1
+%results: if you started out with a polling version and implemented interrupts later on, it's interesting to compare the energy efficiency between these two implementations. interesting what you observed with the lowest drive strength, it's most likely an EFM32 intricacy as you mentioned. 80uA of this is "regular" leakage while the buttons are pressed.
+
+%fra rapport 2
+%results: good catch with the TIMER vs LETIMER playback usage. this could be due to the low frequency oscillator system consuming extra power, though it would've been interesting to see whether using the DAC sample/hold mode made any difference.
+
+Our implementation works as intended. The gamepad buttons work properly, and the game functions correctly.
+
+\section{Energy usage}
+Table~\ref{tab:current} shows the energy usage measurements for our implementation. The ``vanilla'' kernel refers to a kernel configuration where we have changed no settings. The configured kernel is the one configured as described in Section~\ref{sec:compilation}.
+
+Idle current refers to the current when sitting in shell without running the game. Game idle current is measured when the game is paused. Game running current is measured when the players are moving, but no buttons are pressed.
+
+We tried to measure the difference between a polling implementation and an interrupt-signal based one, but the difference was too small to be measured.
+
+\begin{table}[b]
+\centering
+\begin{tabular}{cccc}
+Kernel & Idle current (mA) & Game idle current (mA) & Game running current (mA) \\\hline
+Vanilla & 10.5 & 10.9 & 11.1 \\
+Configured & 8.1 & 9.2 & 9.5 \\ 
+\end{tabular}
+\caption{Running average current readings from eAProfiler program.}
+\label{tab:current}
+\end{table}
+
+\chapter{Potential improvements}
+There are certain aspects of kernel programming we have not explored, most of which are related to concurrency and race conditions.
+
+If multiple GPIO are fired at almost the same time, issues can arise. This can be resolved by using semaphores, mutexes and similar concepts. These solutions, however, introduce another issue --- the interrupt handler can not sit around waiting, as the kernel needs to return to normal execution quickly. 
+For this reason, interrupt handlers are usually separated into a top half and a bottom half. The top half is the code that handles the interrupt and schedules some work to be done at a later time, outside of the interrupt handler. The bottom half is the work that's scheduled.
+
+By doing this, the interrupt handler can both avoid race conditions and avoid stalling for too long.
+
+A second issue is also related to timing. If the gamepad driver issues a \texttt{SIGIO} signal in response to a button being pressed, and the game program does not read from the device before the button is released, it will miss the button press altogether.
+
+This can be resolved by buffering gamepad state changes in the driver, and writing whatever state changes are buffered when a program reads from the device.
+
+Both of these potential issues are very unlikely to happen, but nevertheless plausible.
+
+A final improvement that can be made is getting rid of all the global variables in the gamepad driver, and programming it in a more general way. This could make it possible for the driver to interface with multiple gamepads on different GPIO ports.

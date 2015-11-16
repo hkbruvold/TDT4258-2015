@@ -1,0 +1,10 @@
+\chapter{Background and Theory}
+For the exercise, an EFM32GG-DK3750 development kit from Silicon Labs was used. It features an ARM Cortex-M3 CPU core, multiple IO capabilities, and an energy monitoring system. The development kit has a large focus on energy efficiency, and all individual components are turned off by default, meaning they must be enabled in order to be used.
+
+The different units on the board are memory mapped, and are accessed and controlled by reading and writing memory from the microcontroller. As an addition to the development kit, we used a ``gamepad'', a prototype board with 8 LED lights and 8 push-buttons, connected to the GPIO pins of the development kit with a ribbon cable.
+
+The Cortex-M3 was programmed using ARM Thumb assembly code. The code is compiled on a computer using the GNU toolchain (as, gcc, objcopy) and flashed onto the microcontroller over USB. Programs are also debugged over USB, using GDB.
+
+GPIO, or General Purpose Input/Output, is a generic input/output controller that allows the microcontroller to read from the GPIO pins, or set them to specific values. It can be configured to use interrupts, so the CPU can avoid constantly polling for changed values.
+
+CPU interrupts are used for halting the current line of execution and jumping to another part of the program, specifically an exception handler. When the exception handler finishes its work, execution resumes at the previous location.

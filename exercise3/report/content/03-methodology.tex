@@ -1,0 +1,260 @@
+\chapter{Methodology}
+%fra rapport 1
+%methodology: a good summary overall. I recommend using more subsections to split up 3.2 into smaller parts instead of one long, continuous section.
+
+%fra rapport 2
+%methodology: good content, organization could have been better (e.g go from overview to details for the solution, instead of separating into component-wise development steps or "we set these and these bits for this component"). could've added a few more details on your implementation: generation of random numbers and some details on the data structures representing notes and songs.
+
+
+\section{Compilation}\label{sec:compilation}
+PTXdist allows us to define rules dictating how the system is to be compiled and installed. In order to set up a project, we have to select a main configuration, a platform configuration and a toolchain.
+
+The main configuration defines, among other things, which software is to be installed on the compiled images. The hardware configuration tells PTXdist how to compile and configure the build for our specific hardware platform. The toolchain is a set of programs used for compilation. We use OSELAS.Toolchain() 2012.12.0 as our toolchain.
+
+The Linux kernel can be configured using the \texttt{ptxdist kernelconfig} command. With it, we enabled the \textit{opportunistic sleep} option and the \textit{tickless idle} option, described in Section~\ref{sec:tickless}.
+
+Once everything has been configured, the boot loader, kernel and root file system images can be compiled with \texttt{ptxdist images}, and these can be flashed using the eACommander program.
+
+\section{Gaining shell access}
+When the images have been flashed to the EFM32GG, resetting the board will boot Linux. The shell can be accessed over serial bus by using a serial terminal emulator. We used miniterm.py, starting it with a baud of 115200 on \texttt{/dev/ttyUSB0}.
+
+Once in shell, the gamepad driver is loaded using modprobe: \texttt{modprobe driver-gamepad}. After the driver is loaded, the game can be started by executing the \texttt{game} program.
+
+\section{Gamepad device driver}
+The driver for the gamepad is implemented as a Linux kernel module that uses a character device for interfacing with user space. Furthermore, the driver is written using the platform device API, identifying itself as compatible with the ``tdt4258'' device.
+
+The driver creates a \texttt{/dev/gamepad} character device file in the Linux file system, and user space operations like opening, closing, or reading from this file is handled by the driver. The driver also supports asynchronous notification by sending a \texttt{SIGIO} signal to listening processes when the gamepad state changes.
+
+When a read on the device file is requested, the driver writes a single character wherein each bit represents the state of a gamepad button. Instead of reading from the I/O ports of the GPIO peripheral, the states of the buttons are cached in the driver. Interrupts are used to update this cached data when the button states change. For efficiency, the GPIO interrupts are disabled when the device file is not open.
+
+The combination of signals and interrupts lets us avoid polling altogether, improving the energy efficiency of our implementation.
+
+\subsection{Initialisation}
+Our kernel module's ``init'' and ``exit'' functions are quite simple --- all they do is register and unregister our platform driver with the Linux kernel. Normally, platform devices are registered with the \texttt{platform\_driver\_register} function. Because the GPIO device is not hot-pluggable, we can use the \texttt{platform\_device\_probe} function instead, passing in a reference to the driver's probe function. This calls the probe function right away, meaning that it and any other initialisation functions can reside in the init section of the module. The init function is seen in Listing~\ref{lst:gamepad_init}.
+
+The init section of a module contains all identifiers tagged with \texttt{\_\_init}. These functions and data are unloaded once the init function returns, saving some memory during runtime.
+
+The platform driver struct \texttt{gamepad\_driver} identifies our \texttt{probe} and \texttt{remove} functions, as well as the name of the driver and the compatible device names.
+
+\begin{minipage}{\textwidth}
+\begin{lstlisting}[language=c, label=lst:gamepad_init, caption=The module's initialisation function.]
+static int __init gamepad_init(void)
+{
+    return platform_driver_probe(&gamepad_driver, &gamepad_probe);
+}
+\end{lstlisting}
+\end{minipage}
+
+The \texttt{gamepad\_probe} function is where most of the initialisation happens. It allocates and creates the necessary character device structures, and memory maps and initialises the GPIO pins used by the gamepad.
+
+\subsubsection{The character device}
+The probe function allocates a dynamic major character device number for our driver, with one minor number (we only have a single gamepad). This is done by using the \texttt{alloc\_chrdev\_region} function.
+
+When this is one, we initialise our character device struct, passing a reference to our  that defines the file operations our device supports, which are \texttt{open}, \texttt{release} (close), \texttt{read}, and \texttt{fasync}.
+
+Next, we create a device class, and with it, create a device with the device number we previously allocated that is registered with sysfs. This creates our \texttt{/dev/gamepad} file.
+
+A truncated version of the character device initialisation code (error handling is removed) is seen in Listing~\ref{lst:chr_dev_init}.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=c, label=lst:chr_dev_init, caption=Character device initialisation code from the driver's probe function with error handling removed.]
+alloc_chrdev_region(&device_number, 0, NUM_MINOR, DEVICE_NAME);
+cdev_init(&char_device, &fops);
+cdev_add(&char_device, device_number, NUM_MINOR);
+cl = class_create(THIS_MODULE, DEVICE_NAME);
+dev = device_create(cl, NULL, device_number, NULL, DEVICE_NAME);
+\end{lstlisting}
+\end{minipage}
+
+\subsubsection{GPIO}
+GPIO initialisation consists of requesting and memory mapping parts of the GPIO memory space to kernel address space, and configuring the GPIO pins and interrupts. A summary of this process is shown in Listing~\ref{lst:gpio_init}, showing GPIO port C initialisation. Our actual code is structured slightly differently.
+
+\paragraph{Memory mapping} The first step is acquiring the GPIO memory location. This is done by querying the platform device for the GPIO resource (which is index 0\cite{compendium}). Using this memory location, we can get the locations of GPIO port C and the GPIO interrupt control ports by adding their offsets to the base location.
+
+Using this information, we request exclusive access to this memory from the Linux kernel using \texttt{request\_mem\_region}. If this succeeds, we map the memory locations to kernel space with \texttt{ioremap\_nocache}, and store the pointer returned for later use.
+
+Neither requesting access nor remapping the memory is strictly necessary in our setup. Reading and writing directly to the GPIO memory also works. However, requesting access to the memory ensures that no two programs try to use the memory locations at the same time (assuming, of course, that the other program also requests access before doing anything). Remapping the memory ensures portability.
+
+\paragraph{EFM32GG setup} The final step in initialising GPIO is configuring pins and interrupts. This is done by writing to various registers in our mapped memory regions. We could do this by simply dereferencing the pointers and writing data directly, however, this is not best practice. Using \texttt{ioread32}, \texttt{iowrite32} functions and their friends is the recommended way to read and write I/O memory.
+
+Pins 0-7 on port C are configured as input pins by writing 0x33333333 to the \texttt{GPIO\_PC\_MODEL} register. We configure the same pins to be pull-up by writing 0xFF to \texttt{GPIO\_PC\_DOUT}. 
+
+Writing 0x22222222 to \texttt{GPIO\_EXTIPSELL} selects our pins for interrupt generation. Writing 0xFF to \texttt{GPIO\_EXTIRISE} and \texttt{GPIO\_EXTIFALL} sets interrupts to be generated for both falling and rising edge of the button pins.
+
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=c, label=lst:gpio_init, caption=GPIO port C initialisation.]
+struct resource *resource =
+    platform_get_resource(platform_device, IORESOURCE_MEM, GPIO_MEM_INDEX);
+resource_size_t gpio_pc_address = resource->start + GPIO_PC_BASE;
+
+if (request_mem_region(gpio_pc_address, GPIO_PC_LENGTH, DEVICE_NAME) == NULL)
+    return -EBUSY; // "device or resource busy"
+
+gpio_pc = ioremap_nocache(gpio_pc_address, GPIO_PC_LENGTH);
+
+iowrite32(0x33333333, gpio_pc + GPIO_MODEL);
+iowrite32(0xff, gpio_pc + GPIO_DOUT);
+\end{lstlisting}
+\end{minipage}
+
+\subsection{Character device operation}
+Once our driver has been initialised, it sits in memory waiting for a user space program to interact with its device file, \texttt{/dev/gamepad}. Once this happens, the kernel consults our drivers \texttt{file\_operations} struct, and calls the appropriate function if it's defined.
+
+\subsubsection{Interrupt handling}
+Our interrupt handler, \texttt{gpio\_handler}, is called whenever a button on the gamepad is pressed or released. The interrupt handler reads the state of the buttons from the \texttt{GPIO\_PC\_DIN} register and caches them for later. It clears the interrupt by writing the value of \texttt{GPIO\_IF} to \texttt{GPIO\_IFC}. Lastly, it sends a \texttt{SIGIO} signal to any listening processes with the \texttt{kill\_fasync} function. The interrupt handler code is shown in Listing~\ref{lst:gpio_interrupt}.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=c, label=lst:gpio_interrupt, caption=GPIO interrupt handler.]
+int gpio_if;
+button_data = ioread8(gpio_pc + GPIO_DIN);
+
+gpio_if = ioread32(gpio_irq + GPIO_IF);
+iowrite32(gpio_if, gpio_irq + GPIO_IFC);
+
+if (async_queue)
+    kill_fasync(&async_queue, SIGIO, POLL_IN);
+
+return IRQ_HANDLED;
+\end{lstlisting}
+\end{minipage}
+
+\subsubsection{The open and close functions}
+When a user space program tries to open the device file, the \texttt{gamepad\_open} function is called. Similarly, when that file is closed, \texttt{gamepad\_close} is called. These functions keep a counter between them to track the ``open count'' of the device file. This is used to enable or disable GPIO interrupts depending on the open state of the file.
+
+If the open function determines interrupts should be enabled, it requests two interrupt lines from the kernel, for GPIO odd and even pins. The IRQ numbers of these interrupts are acquired from the platform device during initialisation. If the interrupts are allocated successfully, we tell the GPIO peripheral to start generating interrupts for pins by writing 0xFF to the \texttt{GPIO\_IEN} register. This is shown in Listing~\ref{lst:gpio_open}.
+
+The close function does the opposite. If all open instances of the file are closed, it writes 0 to \texttt{GPIO\_IEN}, and frees the interrupt lines with \texttt{free\_irq}. Additionally, the close function gives our fasync handler a call, to remove the file from the list of asynchronously notified files, if it's there.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=c, label=lst:gpio_open, caption=Enabling GPIO interrupts.]
+err = request_irq(gpio_irq_even, &gpio_handler, 0, DEVICE_NAME, NULL);
+if (err < 0) return err;
+err = request_irq(gpio_irq_odd, &gpio_handler, 0, DEVICE_NAME, NULL);
+if (err < 0) return err;
+
+iowrite32(0xff, gpio_irq + GPIO_IEN);
+\end{lstlisting}
+\end{minipage}
+
+\subsubsection{The read function}
+The \texttt{gamepad\_read} function is very simple. It is called when a user space program wants to read from our device file. All it does, is copy our cached button data to the buffer passed in from the user space program.
+
+There is, however, a very important detail in how this is done. We can't simply write our button data \texttt{char} to the buffer directly. This could cause a page fault, and page faults happening in kernel space is a bad thing\cite{ldd}. Therefore, we use the \texttt{copy\_to\_user} function.
+
+\subsubsection{The fasync function}
+The \texttt{gamepad\_fasync} function is called when a user space program sets the \texttt{FASYNC} flag on the device file. This means that the program wishes to receive a \texttt{SIGIO} signal when the driver receives new data.
+
+Thanks to the Linux kernel providing a \texttt{fasync\_helper} function, implementing this functionality is very simple. All we need is a pointer to a \texttt{fasync\_struct}, and the helper function will do all the bookkeeping.
+
+\subsection{Deinitialisation}
+If our driver is unloaded (e.g. the user removes it using \texttt{rmmod}), everything is deinitialised. This is done with a combination of exit, unregister, delete, destroy, release and unmap functions. Some of these functions have to be called in a specific order (for example, \texttt{device\_destroy} has to come before \texttt{class\_destroy}, because it takes the class as an argument). Except for this, there is nothing special happening during deinitialisation.
+
+\section{The Game} % which I lost
+The game we implemented was a simple version of Achtung, die Kurve! A two player game where each player controls their own tiny square. The square has a fixed speed and is only controlled by turning let or right. Wherever a square moves, it will leave a trail. The goal of the game is to avoid colliding into this trail or the outer border of the board. 
+
+\subsection{Initialisation}
+In the initialisation section of the game, the gamepad driver and the framebuffer driver is initialised. The initalisation of the drivers are described more in Section \ref{ssec:fb} and Section \ref{ssec:gamepaddriver}. In addition to that, some initial variables are set. These variables are the initial position and direction of the players and the state of the game. 
+
+\subsection{Game loop}
+The main loop of the game does two things: Keeping track of time and executing a tick function. The tick function will check the state of the game and make a decision based on the variables \texttt{running} and \texttt{exitgame}. If \texttt{exitgame} is set to 1, the game will quit.  If \texttt{running} is set to 1, the game will continue one step. Each step will update the position of the players, check for collision, and check for buttons pressed on the gamepad. If a collision is detected, it will update the state variables accordingly. When \texttt{running} is set to 1, the game loop will for each tick check for status on the gamepad to see if the user want to restart or exit the game. SW2 will restart the game and SW4 will exit the game.
+
+\subsubsection{Sleep between tick}
+In order for the game to run at a consistent speed, we need some function to keep track of time. This is done with the help of the \texttt{time} library. This library uses a struct called \texttt{timespec} to store time. \texttt{timespec} has two variables: \texttt{tv\_sec} and \texttt{tv\_nsec}. The first variable is for seconds and the last is for nanoseconds since the last second. The function \texttt{clock\_gettime} is used to get the current time. Listing \ref{lst:clkgettime} shows in detail how this function is used. The \texttt{CLOCK\_PROCESS\_CPUTIME\_ID} argument specifies what clock should be used to get the time. A list of all the clocks aviable can be found by running \texttt{man 2 clock\_gettime} in a Linux terminal.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=c, label=lst:clkgettime, caption=How to get current time.]
+struct timespec now;
+clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now);
+\end{lstlisting}
+\end{minipage}
+
+To prevent unnecessary CPU time, we used a sleep function from the \texttt{time} library called \texttt{nanosleep} to sleep between the ticks. This function will make the process sleep for the time specified in a \texttt{timespec} struct. By using \texttt{clock\_gettime} we could get the amount of time spent on the last tick, and then calculate how long it should sleep before executing the next tick. 
+
+\subsubsection{Updating player position}
+The function for updating player position does four things: Calculate new player position, draw players on screen, check for collision, and updating position array for future collision detection. The new positions is calculated by using pre-calculated sine and cosine values. How drawing on the screen is done is described in Section \ref{ssec:fb}. How the collision checking is done is described more in Section \ref{ssec:collision}.
+
+In addition to updating position and drawing on screen, the game loop will also check the gamepad for buttons and update the direction. We defined SW1 and SW3 to be left and right for player 1, and SW5 and SW7 to be left and right for player 2.
+
+\subsection{Framebuffer} \label{ssec:fb}
+In order to draw on the screen, we had to use the Linux Framebuffer driver. Since interaction between a process and a driver happens through a file, the initialisation consists of opening the device file. And then map this file to the memory. This is showed in Listing \ref{lst:fbinit}
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=c, label=lst:fbinit, caption=Initialisation of framebuffer.]
+fd = open("/dev/fb0", O_RDWR);
+screen = mmap(0, 320*240*2, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+\end{lstlisting}
+\end{minipage}
+
+Drawing on the screen is done by modifying the memory area of the device file. This is done the same way as when modifying a regular array. Then ioctl is used to tell the driver what area of the screen to update. This area is defined by using a struct defined in the framebuffer header file called \texttt{fb\_copyarea}. A rectangle is defined in the struct, and then this struct is passed to the driver. Details for this is showed in Listing \ref{lst:fbioctl}. The variables \texttt{dx} and \texttt{dy} is the upperleft corner of the area.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=c, label=lst:fbioctl, caption=Communication with the framebuffer driver.]
+struct fb_copyarea rect;
+rect.dx = dx;
+rect.dy = dy;
+rect.width = width;
+rect.height = height;
+ioctl(fd, 0x4680, &rect);
+\end{lstlisting}
+\end{minipage}
+
+\subsection{Gamepad driver} \label{ssec:gamepaddriver}
+The initialisation of the gamepad driver is in some cases the same as for the framebuffer. We first opened the device file. This is to read which buttons that are pressed. Then for the use of interrupts, we had to configure a struct of type \texttt{sigaction} from the \texttt{signal} library, and then register this struct to the desired signal. This struct contains information of which function is to be run when a signal from the driver arrives. The function \texttt{sigaction} from the \texttt{signal} library is used register an action (the struct) to a specific signal. We configured the \texttt{sigaction} struct to use the function \texttt{readDriver}. All \texttt{readDriver} does is to update a local value for the latest gamepad button data. The last steps that was needed to be done was to set the game process to be the owner of the device file and enable asynchronous notification on the driver. The reason to set the process as owner of the file is so that the driver knows which process to send the \texttt{SIGIO} signal to. Listing \ref{lst:gpdsetup} shows the specifics of how this was implemented.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=c, label=lst:gpdsetup, caption=Setup of the gamepad driver.]
+struct sigaction action;
+
+fd = open("/dev/gamepad", O_RDWR);
+
+memset(&action, 0, sizeof(action));
+action.sa_handler = readDriver;
+action.sa_flags = 0;
+
+sigaction(SIGIO, &action, NULL);
+
+fcntl(fd, F_SETOWN, getpid());
+fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | FASYNC);
+\end{lstlisting}
+\end{minipage}
+
+This configuration will make the local stored variable for the buttons always be updated automatically. So whenever the game wants to read the buttons, it only needs to fetch that local variable.
+
+\subsection{Collision detection} \label{ssec:collision}
+To check for collision we made a char array with the same amount of elements as there are pixels on the screen. This array is updated each time the player moves. If a position contains a 1, it means that the position is either the outer border or a earlier position of a player. 
+
+The downside of using this method is that the memory usage of the array is 76.8 KB. It's not a huge amount, but could be a limitation on an embedded device. An alternative way would be to read directly off the screen via the framebuffer driver. The problem with this way is that the driver would be called every time the game wanted to check for collision. And therefore the reading from the driver would definitely use more CPU time than by checking an array.
+
+\subsection{Drawing bitmap}
+We added a function to draw a simple image with a set colour. A bitmap is stored in a struct with width and height parameters. The data of the image is simply a 1 for a pixel or 0 for transparency. For the trophy displayed when a player wins, we converted a picture of the trophy to an array of 1 and 0. The function that draws the bitmap on screen takes two arguments, the bitmap struct and the colour. It will read the array, and for every 1, it will paint a pixel of the given colour.
+
+\section{Testing}
+In order to test our implementation of the driver and game, we made sure to listen to all compiler warnings, and testing our implementation constantly during development. By developing iteratively, making sure everything still worked during each iteration, we were able to efficiently detect and remove bugs as they appeared.
+
+Before the game was complete, we debugged the driver using the \texttt{cat} program and using human-friendly output in the device driver. The \texttt{cat} program reads until the end of a file and outputs it to \texttt{STDOUT}. Because the gamepad device has no end, it would constantly output the current state of the gamepad, allowing for efficient testing.
+
+For final testing, we used the test plan outlined in Table~\ref{tab:testing}.
+
+\vspace{2em}
+\begin{table}[h]
+\centering
+\begin{tabular}{ccc}
+Test & Expected outcome & Outcome \\\hline
+\texttt{\# modprobe driver-gamepad} & No errors & As expected \\
+\texttt{\# game} with driver loaded& Game runs, no errors & As expected \\
+\texttt{\# game} without driver loaded & Game runs, gamepad doesn't work & As expected \\
+Controlling players with gamepad & Players turn and move correctly & As expected \\
+Crashing player into itself & Player loses & As expected \\
+Crashing player into opponent & Player loses & As expected \\
+Crashing player into boundary & Player loses & As expected \\
+Crashing players simultaneously & Tie & Blue player wins \\
+Hitting SW2 with game in progress & Nothing happens & As expected \\
+Hitting SW2 after game ends & Game restarts & As expected \\
+Hitting SW4 with game in progress & Nothing happens & As expected \\
+Hitting SW4 after game ends & Game quits & As expected
+\end{tabular}
+\caption{Test plan.}
+\label{tab:testing}
+\end{table}
+

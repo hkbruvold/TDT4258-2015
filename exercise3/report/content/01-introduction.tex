@@ -1,0 +1,27 @@
+\chapter{Introduction}
+%fra rapport 1
+%introduction: a good start, but could use more content. anything that relates to the problem or field in general could go here: why are microprocessros/embedded systems important, why low-level programming etc. you can also give a more concrete description of your own solution (i.e. how the button presses map to the LEDs)
+
+%fra rapport 2
+% a better abstract and introduction (general motivation, summary of features and results in the introduction). document somewhere (either intro or methodology) which button is supposed to do what.
+
+%Our main objective in this exercise will be to use the EFM32GG development board to produce sound. After the exercise we should know how development for embedded systems differs from traditional computers. For this exercise we will be coding a game engine in C, and we will be familiarizing ourselves with the microcontroller and its peripherals and the focus on energy conservation of the EFM32GG development board. 
+%In this exercise we recreated the classic DOS game Achtung, die Kurve! (or Zatacka) in C that the user plays with the gamepad and on-board screen. It is a two player game, where each player plays with two buttons on the gamepad peripheral while the other buttons are for  utility purposes.
+
+Microcontrollers and embedded systems are everywhere, and their use is only growing. Very often, they will be running on battery power, meaning that energy efficiency is a large concern in this field. By using a low-level language like C we can maximise our code efficiency.
+
+For this exercise, we will be implementing a Linux device driver and a video game for such an embedded system, the EFM32GG-DK3750 development kit, with a large focus on correctness and energy efficiency.
+
+\section{Device driver functionality}
+Our Linux device driver will be used by reading from a special file called \texttt{/dev/gamepad}. When reading from this file, the gamepad driver will write a single character, eight bits, representing the current gamepad state. A 0 in this character represents a button being pressed.
+
+In addition to this, the driver will support asynchronous operation, dispatching a signal to the program accessing the driver when the gamepad state changes.
+
+\section{Game}
+We will recreate the classic game ``Cervii'' from 1993. The game will be two-player, using the gamepad as an input device, and the integrated 320 by 240 LCD as an output device.
+
+When the game begins, each player moves at a constant speed in a certain direction, leaving a trail behind. Using the gamepad, each player is able to turn to the left or to the right. Once a player collides with his own trail, his opponent's trail, or the screen boundary, he loses.
+
+A trophy is displayed in the center of the screen in the winning player's color when the game ends.
+
+The buttons on the gamepad are labelled SW1 through SW8. SW1 and SW3 are used for the first player's left and right controls, and SW5 and SW7 are the same for the second player. When the game ends, SW2 restarts, while SW4 quits the game.
